@@ -33,6 +33,47 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SessionProvider, useSession } from "./lib/session";
 
+// Catches any render/lifecycle error anywhere below it in the tree and shows
+// a visible message instead of the blank white screen React leaves behind
+// when an uncaught error unmounts the whole app. Without this, a bug deep in
+// a screen (a null field, a failed insert whose result is used unchecked,
+// etc.) is invisible — the page just goes white with nothing in the DOM and
+// nothing obvious to a user reporting the issue.
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    // Still goes to the console/monitoring — the on-screen message is for
+    // the user, this is for whoever debugs it afterward.
+    console.error("BONIK crashed:", error, info.componentStack);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="min-h-screen flex items-center justify-center font-sans text-sm p-6" style={{ background: "#DCE4F0", color: "#516072" }}>
+          <div className="max-w-sm text-center">
+            <p className="font-semibold mb-2" style={{ color: "#122A4E" }}>Something went wrong.</p>
+            <p className="mb-4">{this.state.error?.message || "An unexpected error occurred."}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 rounded-xl font-semibold"
+              style={{ background: "#122A4E", color: "#DCE4F0" }}
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 import BonikAuthFlow from "./screens/BonikAuthFlow";
 import HomeScreen from "./screens/HomeScreen";
 import BillingScreen from "./screens/BillingScreen";
@@ -96,10 +137,12 @@ function AppRoutes() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <SessionProvider>
-        <AppRoutes />
-      </SessionProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <SessionProvider>
+          <AppRoutes />
+        </SessionProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }

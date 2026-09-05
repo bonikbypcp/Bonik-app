@@ -83,8 +83,28 @@ alter table notifications enable row level security;
 create policy "member can view own business" on businesses
   for select using (id in (select my_business_ids()));
 
+-- The "Create Business" registration flow inserts this row before any
+-- membership exists, so it can't be gated by my_business_ids() (empty at
+-- that point) the way every other insert below is — self-check on
+-- owner_user_id instead. Without this policy RLS silently rejects the
+-- insert (default-deny), which is what was breaking business creation.
+create policy "user can create own business" on businesses
+  for insert with check (owner_user_id = auth.uid());
+
 create policy "member can view own memberships" on business_members
   for select using (business_id in (select my_business_ids()));
+
+-- Same chicken-and-egg problem one level down: the very first
+-- business_members row for a new business (its "owner" row) is what
+-- my_business_ids() would otherwise depend on, so it's gated on the
+-- business's owner_user_id instead — only the business's own owner may
+-- insert themselves, and only as 'owner'.
+create policy "owner can create own membership" on business_members
+  for insert with check (
+    user_id = auth.uid()
+    and role = 'owner'
+    and business_id in (select id from businesses where owner_user_id = auth.uid())
+  );
 
 create policy "tenant access" on suppliers
   for all using (business_id in (select my_business_ids()));

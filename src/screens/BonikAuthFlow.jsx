@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
+import { useSession } from "../lib/session";
 
 /*
   BONIK by PCP — Auth & Business Creation flow
@@ -179,6 +180,7 @@ const CATEGORIES = [
 
 export default function BonikAuthFlow() {
   const navigate = useNavigate();
+  const { refreshMember } = useSession();
   const [screen, setScreen] = useState("landing");
   const [mode, setMode] = useState("login"); // login | register
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
@@ -291,6 +293,67 @@ export default function BonikAuthFlow() {
   };
 
   const canSubmitBiz = biz.name && biz.category && biz.ownerName && biz.mobile;
+  const [bizLoading, setBizLoading] = useState(false);
+  const [bizError, setBizError] = useState("");
+
+  // Creates the businesses row (naming this user as owner) and the matching
+  // business_members "owner" row that every other screen's RLS policy relies
+  // on to find businessId. Both must succeed against the businesses/
+  // business_members insert policies in rls.sql, and column names here must
+  // match schema.sql exactly (owner_user_id, mobile_number, gst_number —
+  // not owner_id/mobile/gst) or Supabase rejects the insert outright.
+  const handleCreateBusiness = async () => {
+    if (!canSubmitBiz || bizLoading) return;
+    setBizError("");
+    setBizLoading(true);
+
+    const { data: userData, error: userErr } = await supabase.auth.getUser();
+    const uid = userData?.user?.id;
+    if (userErr || !uid) {
+      setBizError("Your session expired — please log in again.");
+      setBizLoading(false);
+      return;
+    }
+
+    const { data: newBiz, error: bizInsertError } = await supabase
+      .from("businesses")
+      .insert({
+        name: biz.name,
+        category: biz.category,
+        owner_user_id: uid,
+        mobile_number: biz.mobile || null,
+        address: biz.address || null,
+        gst_number: biz.gst || null,
+      })
+      .select()
+      .single();
+
+    if (bizInsertError || !newBiz) {
+      setBizError(bizInsertError?.message || "Could not create the business. Please try again.");
+      setBizLoading(false);
+      return;
+    }
+
+    const { error: memberInsertError } = await supabase.from("business_members").insert({
+      business_id: newBiz.id,
+      user_id: uid,
+      role: "owner",
+      status: "active",
+    });
+
+    if (memberInsertError) {
+      setBizError(memberInsertError.message);
+      setBizLoading(false);
+      return;
+    }
+
+    // SessionProvider loaded (no) membership once, at login — it has no way
+    // to know a business_members row now exists unless told, and every
+    // protected route reads businessId straight from it.
+    await refreshMember();
+    setBizLoading(false);
+    setScreen("success");
+  };
 
   // ---------- LANDING ----------
   if (screen === "landing") {
@@ -623,8 +686,11 @@ export default function BonikAuthFlow() {
             </button>
           </div>
 
-          <PrimaryButton disabled={!canSubmitBiz} onClick={() => setScreen("success")}>
-            Create Business
+          {bizError && (
+            <p className="font-mono text-xs mb-4" style={{ color: TOKENS.due }}>{bizError}</p>
+          )}
+          <PrimaryButton disabled={!canSubmitBiz || bizLoading} onClick={handleCreateBusiness}>
+            {bizLoading ? "Creating…" : "Create Business"}
           </PrimaryButton>
         </div>
       </Shell>
