@@ -80,8 +80,21 @@ alter table notifications enable row level security;
 --    join up through their parent row instead.
 -- ----------------------------------------------------------------------------
 
+-- owner_user_id = auth.uid() is included here, not just membership, because
+-- the "Create Business" flow needs to see this row in two places before any
+-- business_members row exists: the .select() that reads the insert straight
+-- back in BonikAuthFlow.jsx, and the subquery inside "owner can create own
+-- membership" below (a WITH CHECK subquery against businesses is itself
+-- subject to businesses' own SELECT policy). Without this clause, both of
+-- those see zero rows — the insert on this table appears to succeed, but
+-- the code can't read it back and the very next insert into
+-- business_members is rejected by RLS, leaving the flow stuck with no
+-- membership row and no visible business.
 create policy "member can view own business" on businesses
-  for select using (id in (select my_business_ids()));
+  for select using (
+    id in (select my_business_ids())
+    or owner_user_id = auth.uid()
+  );
 
 -- The "Create Business" registration flow inserts this row before any
 -- membership exists, so it can't be gated by my_business_ids() (empty at

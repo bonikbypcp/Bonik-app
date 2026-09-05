@@ -236,6 +236,19 @@ export default function BonikAuthFlow() {
     return () => { cancelled = true; };
   }, [screen, navigate]);
 
+  // Once the roleGate check above finishes with no redirect (no existing
+  // membership, no pending request), move on to role selection. This has to
+  // be declared here, unconditionally with every other hook, and NOT after
+  // the "landing"/"login" screens' early `return`s below — a hook called on
+  // some renders (roleGate/register/verify/role/...) but skipped on others
+  // (landing/login) is a Rules-of-Hooks violation: React tracks hooks by
+  // call order, so a component whose hook count changes between renders
+  // corrupts that tracking and can crash the whole tree with no useful
+  // error, which is exactly what was happening here.
+  useEffect(() => {
+    if (screen === "roleGate" && !roleGateChecking) setScreen("role");
+  }, [screen, roleGateChecking]);
+
   const [form, setForm] = useState({
     fullName: "",
     mobile: "",
@@ -307,52 +320,69 @@ export default function BonikAuthFlow() {
     setBizError("");
     setBizLoading(true);
 
-    const { data: userData, error: userErr } = await supabase.auth.getUser();
-    const uid = userData?.user?.id;
-    if (userErr || !uid) {
-      setBizError("Your session expired — please log in again.");
+    // Any unexpected throw here (a network failure, a malformed response)
+    // must land in bizError, not escape as an unhandled rejection — that
+    // would leave the button stuck on "Creating…" with no feedback and,
+    // combined with an event-handler throw being invisible to a render-only
+    // ErrorBoundary, look exactly like nothing happened.
+    try {
+      const { data: userData, error: userErr } = await supabase.auth.getUser();
+      const uid = userData?.user?.id;
+      if (userErr || !uid) {
+        setBizError("Your session expired — please log in again.");
+        return;
+      }
+
+      // .select() here reads the row straight back, which requires the
+      // businesses SELECT policy to already allow this user to see it —
+      // see rls.sql: "user can create own business" covers the insert
+      // itself, but the row was still invisible immediately afterward until
+      // "member can view own business" was extended to also allow
+      // owner_user_id = auth.uid(), not just an existing membership.
+      const { data: newBiz, error: bizInsertError } = await supabase
+        .from("businesses")
+        .insert({
+          name: biz.name,
+          category: biz.category,
+          owner_user_id: uid,
+          mobile_number: biz.mobile || null,
+          address: biz.address || null,
+          gst_number: biz.gst || null,
+        })
+        .select()
+        .single();
+
+      if (bizInsertError || !newBiz) {
+        setBizError(bizInsertError?.message || "Could not create the business. Please try again.");
+        return;
+      }
+
+      // This insert's RLS check also reads businesses (to confirm this user
+      // owns business_id) — the same policy fix above is what lets this
+      // succeed, since it's the very first business_members row for this
+      // business and can't rely on my_business_ids() the way later queries do.
+      const { error: memberInsertError } = await supabase.from("business_members").insert({
+        business_id: newBiz.id,
+        user_id: uid,
+        role: "owner",
+        status: "active",
+      });
+
+      if (memberInsertError) {
+        setBizError(memberInsertError.message);
+        return;
+      }
+
+      // SessionProvider loaded (no) membership once, at login — it has no
+      // way to know a business_members row now exists unless told, and
+      // every protected route reads businessId straight from it.
+      await refreshMember();
+      setScreen("success");
+    } catch (err) {
+      setBizError(err?.message || "Something went wrong creating the business. Please try again.");
+    } finally {
       setBizLoading(false);
-      return;
     }
-
-    const { data: newBiz, error: bizInsertError } = await supabase
-      .from("businesses")
-      .insert({
-        name: biz.name,
-        category: biz.category,
-        owner_user_id: uid,
-        mobile_number: biz.mobile || null,
-        address: biz.address || null,
-        gst_number: biz.gst || null,
-      })
-      .select()
-      .single();
-
-    if (bizInsertError || !newBiz) {
-      setBizError(bizInsertError?.message || "Could not create the business. Please try again.");
-      setBizLoading(false);
-      return;
-    }
-
-    const { error: memberInsertError } = await supabase.from("business_members").insert({
-      business_id: newBiz.id,
-      user_id: uid,
-      role: "owner",
-      status: "active",
-    });
-
-    if (memberInsertError) {
-      setBizError(memberInsertError.message);
-      setBizLoading(false);
-      return;
-    }
-
-    // SessionProvider loaded (no) membership once, at login — it has no way
-    // to know a business_members row now exists unless told, and every
-    // protected route reads businessId straight from it.
-    await refreshMember();
-    setBizLoading(false);
-    setScreen("success");
   };
 
   // ---------- LANDING ----------
@@ -438,12 +468,6 @@ export default function BonikAuthFlow() {
       </Shell>
     );
   }
-
-  // After login: roleGate checks for an existing membership or pending request (see useEffect above)
-  // and redirects automatically. If neither exists, send them to role selection to start fresh.
-  useEffect(() => {
-    if (screen === "roleGate" && !roleGateChecking) setScreen("role");
-  }, [screen, roleGateChecking]);
 
   if (screen === "roleGate") {
     return (

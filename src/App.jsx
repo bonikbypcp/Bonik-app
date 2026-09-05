@@ -33,6 +33,21 @@ import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SessionProvider, useSession } from "./lib/session";
 
+import BonikAuthFlow from "./screens/BonikAuthFlow";
+import HomeScreen from "./screens/HomeScreen";
+import BillingScreen from "./screens/BillingScreen";
+import LedgerScreen from "./screens/LedgerScreen";
+import InventoryScreen from "./screens/InventoryScreen";
+import DailyProductScreen from "./screens/DailyProductScreen";
+import DailyExpenseScreen from "./screens/DailyExpenseScreen";
+import StaffScreen from "./screens/StaffScreen";
+import OnlineShopScreen from "./screens/OnlineShopScreen";
+import Storefront from "./screens/Storefront";
+import SettingsScreen from "./screens/SettingsScreen";
+import SystemSettings from "./screens/SystemSettings";
+import OperatorAdmin from "./screens/OperatorAdmin";
+import BillScanScreen from "./screens/BillScanScreen";
+
 // Catches any render/lifecycle error anywhere below it in the tree and shows
 // a visible message instead of the blank white screen React leaves behind
 // when an uncaught error unmounts the whole app. Without this, a bug deep in
@@ -73,21 +88,6 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-
-import BonikAuthFlow from "./screens/BonikAuthFlow";
-import HomeScreen from "./screens/HomeScreen";
-import BillingScreen from "./screens/BillingScreen";
-import LedgerScreen from "./screens/LedgerScreen";
-import InventoryScreen from "./screens/InventoryScreen";
-import DailyProductScreen from "./screens/DailyProductScreen";
-import DailyExpenseScreen from "./screens/DailyExpenseScreen";
-import StaffScreen from "./screens/StaffScreen";
-import OnlineShopScreen from "./screens/OnlineShopScreen";
-import Storefront from "./screens/Storefront";
-import SettingsScreen from "./screens/SettingsScreen";
-import SystemSettings from "./screens/SystemSettings";
-import OperatorAdmin from "./screens/OperatorAdmin";
-import BillScanScreen from "./screens/BillScanScreen";
 
 // Wraps every screen that needs a logged-in user AND an active business
 // membership. Redirects to /auth if either is missing, so a screen never
