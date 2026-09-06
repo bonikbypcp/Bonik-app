@@ -50,7 +50,7 @@ function TextInput({ label, ...props }) {
   return (
     <div className="mb-4">
       <FieldLabel>{label}</FieldLabel>
-      <input {...props} className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+      <input {...props} className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
     </div>
   );
 }
@@ -231,7 +231,7 @@ export default function BonikStorefront() {
               ? `Your order is packed and ready. Come collect it anytime after ${deliveryDate} — bring ${orderNumber}.`
               : `Payment received — ${SHOP.name} will deliver your order on ${deliveryDate}.`}
           </p>
-          <button onClick={() => { setCart({}); setScreen("home"); setApproved(false); setFulfillment(null); setNotified(false); }} className="mt-6 font-mono text-xs underline" style={{ color: TOKENS.ink, opacity: 0.68 }}>Continue shopping</button>
+          <button onClick={() => { setCart({}); setScreen("home"); setApproved(false); setFulfillment(null); setNotified(false); }} className="mt-6 font-mono text-xs underline rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>Continue shopping</button>
         </div>
       </Shell>
     );
@@ -323,7 +323,7 @@ export default function BonikStorefront() {
     return (
       <Shell>
         <div className="px-5 pt-8 pb-24">
-          <button onClick={() => setScreen("cart")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> cart</button>
+          <button onClick={() => setScreen("cart")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> cart</button>
           <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Checkout</h2>
 
           <TextInput label="Customer Code (if you've ordered before)" value={customerCode} onChange={(e) => lookupCode(e.target.value)} placeholder="CUST-014" />
@@ -386,7 +386,7 @@ export default function BonikStorefront() {
     return (
       <Shell>
         <div className="px-5 pt-8 pb-32">
-          <button onClick={() => setScreen("home")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> shop</button>
+          <button onClick={() => setScreen("home")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> shop</button>
           <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Your Cart</h2>
 
           {cartItems.length === 0 ? (
@@ -401,9 +401,9 @@ export default function BonikStorefront() {
                   <div className="px-2 font-mono text-[11px]" style={{ color: TOKENS.ink, opacity: 0.75 }}>{it.code}</div>
                   <div className="px-1.5 font-sans text-[11px] truncate" style={{ color: TOKENS.inkDeep }}>{it.name}</div>
                   <div className="flex items-center justify-center gap-1.5">
-                    <button onClick={() => setQty(it.id, it.qty - 1)} className="w-5 h-5 rounded-2xl border flex items-center justify-center" style={{ borderColor: TOKENS.line }}><Minus size={9} color={TOKENS.ink} /></button>
+                    <button onClick={() => setQty(it.id, it.qty - 1)} className="w-5 h-5 rounded-2xl border flex items-center justify-center" style={{ borderColor: TOKENS.line, background: "#FFFFFF" }}><Minus size={9} color={TOKENS.ink} /></button>
                     <span className="font-mono tabular-nums" style={{ color: TOKENS.inkDeep }}>{it.qty}</span>
-                    <button onClick={() => setQty(it.id, it.qty + 1)} className="w-5 h-5 rounded-2xl border flex items-center justify-center" style={{ borderColor: TOKENS.line }}><Plus size={9} color={TOKENS.ink} /></button>
+                    <button onClick={() => setQty(it.id, it.qty + 1)} className="w-5 h-5 rounded-2xl border flex items-center justify-center" style={{ borderColor: TOKENS.line, background: "#FFFFFF" }}><Plus size={9} color={TOKENS.ink} /></button>
                   </div>
                   <div className="px-2 text-right font-mono tabular-nums" style={{ color: TOKENS.inkDeep }}>{money(it.price * it.qty)}</div>
                 </div>
@@ -445,7 +445,7 @@ export default function BonikStorefront() {
     return (
       <Shell>
         <div className="px-5 pt-8 pb-8">
-          <button onClick={() => setScreen("home")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> shop</button>
+          <button onClick={() => setScreen("home")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> shop</button>
           <div className="w-full aspect-square rounded-2xl mb-5 flex items-center justify-center" style={{ background: TOKENS.paperDeep }}>
             <span className="font-display font-bold text-2xl" style={{ color: TOKENS.ink, opacity: 0.45 }}>{p.name.slice(0, 2).toUpperCase()}</span>
           </div>

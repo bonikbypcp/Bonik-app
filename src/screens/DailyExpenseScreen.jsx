@@ -47,7 +47,7 @@ function TextInput({ label, ...props }) {
   return (
     <div className="mb-4">
       <FieldLabel>{label}</FieldLabel>
-      <input {...props} className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+      <input {...props} className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
     </div>
   );
 }
@@ -166,7 +166,7 @@ export default function BonikDailyExpenseScreen() {
   if (screen === "entry") {
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Daily Expense Entry</h2>
 
         <div className="mb-5">

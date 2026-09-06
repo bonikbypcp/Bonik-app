@@ -63,8 +63,8 @@ function TextInput({ label, ...props }) {
       <FieldLabel>{label}</FieldLabel>
       <input
         {...props}
-        className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none"
-        style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }}
+        className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none"
+        style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}
         onFocus={(e) => (e.target.style.borderColor = TOKENS.saffron)}
         onBlur={(e) => (e.target.style.borderColor = TOKENS.line)}
       />
@@ -284,7 +284,7 @@ export default function BonikBillingScreen() {
     const canSubmit = newCustomer.name && newCustomer.mobile;
     return (
       <Shell>
-        <button onClick={() => setScreen("customerList")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}>
+        <button onClick={() => setScreen("customerList")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>
           <ArrowLeft size={13} /> back
         </button>
         <h2 className="font-display font-semibold text-xl mb-6 px-1" style={{ color: TOKENS.inkDeep }}>Add Customer</h2>
@@ -342,7 +342,7 @@ export default function BonikBillingScreen() {
   // ---------- Bill Table ----------
   return (
     <Shell>
-      <button onClick={() => setScreen("customerList")} className="font-mono text-xs mb-4 flex items-center gap-1 px-1" style={{ color: TOKENS.ink, opacity: 0.68 }}>
+      <button onClick={() => setScreen("customerList")} className="font-mono text-xs mb-4 flex items-center gap-1 px-1 rounded-full border" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>
         <ArrowLeft size={13} /> change customer
       </button>
 
@@ -395,7 +395,7 @@ export default function BonikBillingScreen() {
         </div>
 
         {lines.map((l) => (
-          <div key={l.id} className="grid items-center text-[12.5px] py-2 border-t" style={{ gridTemplateColumns: "15% 14% 12% 5% 13% 31% 10%", borderColor: TOKENS.line }}>
+          <div key={l.id} className="grid items-center text-[12.5px] py-2 border-t" style={{ gridTemplateColumns: "15% 14% 12% 5% 13% 31% 10%", borderColor: TOKENS.line, background: "#FFFFFF" }}>
             <div className="px-2 font-mono truncate text-[13px]" style={{ color: TOKENS.ink, opacity: 0.75 }}>{l.code}</div>
             <div className="px-1.5 font-sans truncate text-[10px]" style={{ color: TOKENS.inkDeep }}>{l.name}</div>
             <div className="text-center font-mono text-[15px] tabular-nums" style={{ color: TOKENS.inkDeep }}>{l.qty}</div>

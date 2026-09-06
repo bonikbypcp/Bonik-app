@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabaseClient";
 import { useSession } from "../lib/session";
@@ -60,8 +60,8 @@ function TextInput({ label, ...props }) {
       <FieldLabel>{label}</FieldLabel>
       <input
         {...props}
-        className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none transition-colors focus:border-current"
-        style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }}
+        className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none transition-colors focus:border-current"
+        style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}
         onFocus={(e) => (e.target.style.borderColor = TOKENS.saffron)}
         onBlur={(e) => (e.target.style.borderColor = TOKENS.line)}
       />
@@ -79,6 +79,18 @@ function PrimaryButton({ children, onClick, disabled, type = "button" }) {
       style={{ background: TOKENS.ink, color: TOKENS.paper }}
     >
       {children}
+    </button>
+  );
+}
+
+function BackButton({ onClick, className = "" }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-full font-mono text-xs border transition-all active:scale-[0.98] ${className}`}
+      style={{ color: TOKENS.ink, background: "#FFFFFF", borderColor: TOKENS.line }}
+    >
+      ← Back
     </button>
   );
 }
@@ -182,6 +194,53 @@ export default function BonikAuthFlow() {
   const navigate = useNavigate();
   const { refreshMember } = useSession();
   const [screen, setScreen] = useState("landing");
+
+  // Internal back-navigation. screenStackRef tracks the real steps the user
+  // has actually visited (landing, login, register, verify, role,
+  // pendingApproval, bizProfile, success) — "roleGate" is deliberately never
+  // pushed onto it, since it's a transient auto-redirect rather than a step
+  // the user consciously took, so back-ing out of whatever it resolves to
+  // correctly lands on the step before it (e.g. "login"), not on a loading
+  // spinner. Each push also claims one browser history entry via
+  // pushState, so the physical/device back button and our in-app "Back"
+  // buttons go through the exact same code path below (goBack just calls
+  // history.back(); the popstate listener is what actually pops the
+  // stack) — that's what keeps a browser back press from leaving /auth
+  // outright while this flow is still in progress.
+  const screenStackRef = useRef(["landing"]);
+
+  const pushScreen = useCallback((next) => {
+    screenStackRef.current.push(next);
+    window.history.pushState({ bonikAuthStep: screenStackRef.current.length }, "");
+    setScreen(next);
+  }, []);
+
+  const goBack = useCallback(() => {
+    window.history.back();
+  }, []);
+
+  useEffect(() => {
+    // Claim one history entry for the flow's starting point so the very
+    // first back press (in-app or physical) has something of ours to land
+    // on instead of immediately leaving /auth.
+    window.history.replaceState({ bonikAuthStep: 1 }, "");
+
+    const onPopState = () => {
+      const stack = screenStackRef.current;
+      if (stack.length > 1) {
+        stack.pop();
+        setScreen(stack[stack.length - 1]);
+      }
+      // Already back at "landing" — nothing left of ours to pop, so this
+      // and any further back presses behave normally (leave /auth). This
+      // is also what makes the interception end once the flow is complete:
+      // navigating to /home unmounts this component, and the cleanup below
+      // removes this listener, so browser back works normally again.
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   const [mode, setMode] = useState("login"); // login | register
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loginLoading, setLoginLoading] = useState(false);
@@ -229,12 +288,12 @@ export default function BonikAuthFlow() {
 
       const { data: req } = await supabase.from("join_requests").select("*, business:businesses(name)").eq("user_id", uid).eq("status", "pending").maybeSingle();
       if (cancelled) return;
-      if (req) { setPendingRequest(req); setScreen("pendingApproval"); return; }
+      if (req) { setPendingRequest(req); pushScreen("pendingApproval"); return; }
 
       setRoleGateChecking(false); // no membership, no pending request — fall through to role selection below
     })();
     return () => { cancelled = true; };
-  }, [screen, navigate]);
+  }, [screen, navigate, pushScreen]);
 
   // Once the roleGate check above finishes with no redirect (no existing
   // membership, no pending request), move on to role selection. This has to
@@ -246,8 +305,8 @@ export default function BonikAuthFlow() {
   // corrupts that tracking and can crash the whole tree with no useful
   // error, which is exactly what was happening here.
   useEffect(() => {
-    if (screen === "roleGate" && !roleGateChecking) setScreen("role");
-  }, [screen, roleGateChecking]);
+    if (screen === "roleGate" && !roleGateChecking) pushScreen("role");
+  }, [screen, roleGateChecking, pushScreen]);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -302,7 +361,7 @@ export default function BonikAuthFlow() {
       setSignUpError(error.message);
       return;
     }
-    setScreen("verify");
+    pushScreen("verify");
   };
 
   const canSubmitBiz = biz.name && biz.category && biz.ownerName && biz.mobile;
@@ -377,7 +436,7 @@ export default function BonikAuthFlow() {
       // way to know a business_members row now exists unless told, and
       // every protected route reads businessId straight from it.
       await refreshMember();
-      setScreen("success");
+      pushScreen("success");
     } catch (err) {
       setBizError(err?.message || "Something went wrong creating the business. Please try again.");
     } finally {
@@ -389,7 +448,8 @@ export default function BonikAuthFlow() {
   if (screen === "landing") {
     return (
       <Shell>
-        <div className="flex flex-col min-h-[85vh]">
+        <BackButton onClick={goBack} className="mb-6" />
+        <div className="flex flex-col min-h-[80vh]">
           <div className="flex-1 flex flex-col items-center justify-center text-center">
             <div
               className="w-16 h-16 rounded-2xl mb-6 flex items-center justify-center rotate-3"
@@ -405,13 +465,13 @@ export default function BonikAuthFlow() {
             </p>
           </div>
           <div className="space-y-3">
-            <PrimaryButton onClick={() => { setMode("login"); setScreen("login"); }}>
+            <PrimaryButton onClick={() => { setMode("login"); pushScreen("login"); }}>
               Log In
             </PrimaryButton>
             <button
-              onClick={() => { setMode("register"); setScreen("register"); }}
+              onClick={() => { setMode("register"); pushScreen("register"); }}
               className="w-full py-3.5 rounded-2xl font-display font-semibold text-[15px] tracking-wide border-2 transition-all active:scale-[0.98]"
-              style={{ borderColor: TOKENS.ink, color: TOKENS.ink }}
+              style={{ borderColor: TOKENS.ink, color: TOKENS.ink, background: "#FFFFFF" }}
             >
               Create a Business
             </button>
@@ -425,9 +485,7 @@ export default function BonikAuthFlow() {
   if (screen === "login") {
     return (
       <Shell>
-        <button onClick={() => setScreen("landing")} className="font-mono text-xs mb-8" style={{ color: TOKENS.ink, opacity: 0.68 }}>
-          ← back
-        </button>
+        <BackButton onClick={goBack} className="mb-8" />
         <Wordmark />
         <p className="font-sans text-sm mt-2 mb-6" style={{ color: TOKENS.ink, opacity: 0.75 }}>
           Welcome back. Log in to your ledger.
@@ -461,7 +519,7 @@ export default function BonikAuthFlow() {
           <PrimaryButton onClick={handleLogin} disabled={loginLoading || !loginForm.email || !loginForm.password}>
             {loginLoading ? "Logging in…" : "Log In"}
           </PrimaryButton>
-          <GhostButton onClick={() => { setMode("register"); setScreen("register"); }}>
+          <GhostButton onClick={() => { setMode("register"); pushScreen("register"); }}>
             New here? Create a business →
           </GhostButton>
         </div>
@@ -484,9 +542,7 @@ export default function BonikAuthFlow() {
   if (screen === "register") {
     return (
       <Shell>
-        <button onClick={() => setScreen("landing")} className="font-mono text-xs mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>
-          ← back
-        </button>
+        <BackButton onClick={goBack} className="mb-6" />
         <ProgressDots step={0} total={4} />
         <div className="mb-6">
           <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 1 of 4</div>
@@ -518,9 +574,7 @@ export default function BonikAuthFlow() {
   if (screen === "verify") {
     return (
       <Shell>
-        <button onClick={() => setScreen("register")} className="font-mono text-xs mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>
-          ← back
-        </button>
+        <BackButton onClick={goBack} className="mb-6" />
         <ProgressDots step={1} total={4} />
         <div className="mb-6">
           <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 2 of 4</div>
@@ -537,7 +591,7 @@ export default function BonikAuthFlow() {
               // clicking the emailed link may have confirmed the account without logging in this tab
               await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
             }
-            setScreen("role");
+            pushScreen("role");
           }}>
             I've Confirmed — Continue
           </PrimaryButton>
@@ -551,9 +605,7 @@ export default function BonikAuthFlow() {
   if (screen === "role") {
     return (
       <Shell>
-        <button onClick={() => setScreen("verify")} className="font-mono text-xs mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>
-          ← back
-        </button>
+        <BackButton onClick={goBack} className="mb-6" />
         <ProgressDots step={2} total={4} />
         <div className="mb-6">
           <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 3 of 4</div>
@@ -579,7 +631,7 @@ export default function BonikAuthFlow() {
         <div className="mt-8">
           <PrimaryButton
             disabled={!role}
-            onClick={() => setScreen(role === "owner" ? "bizProfile" : "pendingApproval")}
+            onClick={() => pushScreen(role === "owner" ? "bizProfile" : "pendingApproval")}
           >
             Continue
           </PrimaryButton>
@@ -594,7 +646,8 @@ export default function BonikAuthFlow() {
     if (pendingRequest) {
       return (
         <Shell>
-          <div className="flex flex-col items-center justify-center min-h-[85vh] text-center">
+          <BackButton onClick={goBack} className="mb-6" />
+          <div className="flex flex-col items-center justify-center min-h-[75vh] text-center">
             <StampBadge label={"REQUEST SENT"} />
             <h2 className="font-display font-semibold text-xl mt-2" style={{ color: TOKENS.inkDeep }}>Waiting for approval</h2>
             <p className="font-sans text-sm mt-3 max-w-[280px]" style={{ color: TOKENS.ink, opacity: 0.75 }}>
@@ -630,7 +683,8 @@ export default function BonikAuthFlow() {
 
     return (
       <Shell>
-        <div className="flex flex-col items-center justify-center min-h-[85vh] text-center">
+        <BackButton onClick={goBack} className="mb-6" />
+        <div className="flex flex-col items-center justify-center min-h-[75vh] text-center">
           <StampBadge label={"REQUEST SENT"} />
           <h2 className="font-display font-semibold text-xl mt-2" style={{ color: TOKENS.inkDeep }}>
             Waiting for approval
@@ -664,9 +718,7 @@ export default function BonikAuthFlow() {
   if (screen === "bizProfile") {
     return (
       <Shell>
-        <button onClick={() => setScreen("role")} className="font-mono text-xs mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>
-          ← back
-        </button>
+        <BackButton onClick={goBack} className="mb-6" />
         <ProgressDots step={3} total={4} />
         <div className="mb-6">
           <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 4 of 4</div>
@@ -704,7 +756,7 @@ export default function BonikAuthFlow() {
             <FieldLabel>Shop Photo (Optional)</FieldLabel>
             <button
               className="w-full py-4 rounded-2xl border-2 border-dashed font-mono text-xs"
-              style={{ borderColor: TOKENS.line, color: TOKENS.ink, opacity: 0.72 }}
+              style={{ borderColor: TOKENS.line, color: TOKENS.ink, opacity: 0.72, background: "#FFFFFF" }}
             >
               Tap to take or upload a shop photo — this doubles as your business logo
             </button>
@@ -725,7 +777,8 @@ export default function BonikAuthFlow() {
   if (screen === "success") {
     return (
       <Shell>
-        <div className="flex flex-col items-center justify-center min-h-[85vh] text-center">
+        <BackButton onClick={goBack} className="mb-6" />
+        <div className="flex flex-col items-center justify-center min-h-[75vh] text-center">
           <StampBadge label={"BUSINESS LIVE"} />
           <h2 className="font-display font-semibold text-2xl mt-2" style={{ color: TOKENS.inkDeep }}>
             {biz.name || "Your business"} is ready

@@ -147,7 +147,7 @@ export default function BonikBillScanScreen() {
     const total = reviewItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Review Bill</h2>
         <p className="font-mono text-[11px] mb-5" style={{ color: TOKENS.ink, opacity: 0.68 }}>Check and fix before saving — nothing's saved yet</p>
 
@@ -292,7 +292,7 @@ function CleanupScreen({ businessId, onBack }) {
 
   return (
     <Shell>
-      <button onClick={onBack} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+      <button onClick={onBack} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
       <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Fix Similar Names</h2>
       <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>Tick the ones that are the same item, then pick the correct spelling</p>
 

@@ -59,7 +59,7 @@ function TextInput({ label, ...props }) {
   return (
     <div className="mb-4">
       <FieldLabel>{label}</FieldLabel>
-      <input {...props} className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+      <input {...props} className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
     </div>
   );
 }
@@ -183,7 +183,7 @@ export default function BonikInventoryScreen() {
   if (screen === "addChoice") {
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Add Product</h2>
         <div className="space-y-3">
           <button onClick={() => setScreen("addProduct")} className="w-full text-left px-4 py-4 rounded-2xl" style={{ background: "#FFFFFF", boxShadow: "0 1px 3px rgba(10,25,48,0.08)" }}>
@@ -215,7 +215,7 @@ export default function BonikInventoryScreen() {
     };
     return (
       <Shell>
-        <button onClick={() => setScreen("addChoice")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("addChoice")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-2" style={{ color: TOKENS.inkDeep }}>Add Photos</h2>
         <p className="font-sans text-sm mb-8" style={{ color: TOKENS.ink, opacity: 0.75 }}>One photo per product — pick as many as you like, then write details under each.</p>
         <div className="space-y-3">
@@ -274,7 +274,7 @@ export default function BonikInventoryScreen() {
     };
     return (
       <Shell>
-        <button onClick={() => setScreen("bulkSource")} className="font-mono text-xs mb-4 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("bulkSource")} className="font-mono text-xs mb-4 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Write Details</h2>
         <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>{bulkItems.length} photos · fill in each, then Add All</p>
         <div className="space-y-4 mb-24">
@@ -289,10 +289,10 @@ export default function BonikInventoryScreen() {
                   )}
                 </div>
                 <div className="flex-1 p-2.5 space-y-1.5">
-                  <input value={it.code} onChange={(e) => updateBulk(it.id, "code", e.target.value)} placeholder="Code (P-105)" className="w-full bg-transparent border-b pb-1 text-[12px] font-mono outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
-                  <input value={it.name} onChange={(e) => updateBulk(it.id, "name", e.target.value)} placeholder="Product name" className="w-full bg-transparent border-b pb-1 text-[13px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+                  <input value={it.code} onChange={(e) => updateBulk(it.id, "code", e.target.value)} placeholder="Code (P-105)" className="w-full bg-transparent border-b pb-1 text-[12px] font-mono outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
+                  <input value={it.name} onChange={(e) => updateBulk(it.id, "name", e.target.value)} placeholder="Product name" className="w-full bg-transparent border-b pb-1 text-[13px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
                   <div className="flex gap-2">
-                    <input value={it.buyPrice} onChange={(e) => updateBulk(it.id, "buyPrice", e.target.value)} placeholder="Buy ₹" type="number" className="w-1/2 bg-transparent border-b pb-1 text-[12px] font-mono outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+                    <input value={it.buyPrice} onChange={(e) => updateBulk(it.id, "buyPrice", e.target.value)} placeholder="Buy ₹" type="number" className="w-1/2 bg-transparent border-b pb-1 text-[12px] font-mono outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
                     <input value={it.sellPrice} onChange={(e) => updateBulk(it.id, "sellPrice", e.target.value)} placeholder="Sell ₹" type="number" className="w-1/2 bg-transparent border-b pb-1 text-[12px] font-mono outline-none" style={{ borderColor: TOKENS.saffron, color: TOKENS.inkDeep }} />
                   </div>
                 </div>
@@ -320,7 +320,7 @@ export default function BonikInventoryScreen() {
     const canSubmit = newProduct.name && newProduct.code && newProduct.price;
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Add Product</h2>
         <TextInput label="Product Name" value={newProduct.name} onChange={(e) => setNewProduct((p) => ({ ...p, name: e.target.value }))} placeholder="e.g. Tata Salt 1kg" />
         <TextInput label="Product Code" value={newProduct.code} onChange={(e) => setNewProduct((p) => ({ ...p, code: e.target.value }))} placeholder="P-105" />
@@ -386,7 +386,7 @@ export default function BonikInventoryScreen() {
 
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-4 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> product list</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-4 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> product list</button>
         <h2 className="font-display font-semibold text-xl mb-4" style={{ color: TOKENS.inkDeep }}>Inventory Reports</h2>
         <div className="grid grid-cols-3 gap-1.5 mb-6">
           {REPORT_TABS.map((t) => (

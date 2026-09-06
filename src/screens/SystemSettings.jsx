@@ -126,7 +126,7 @@ export default function BonikSystemSettings() {
   if (screen === "display") {
     return (
       <Shell scale={scale}>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> settings</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> settings</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Display</h2>
         <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>One number scales everything, everywhere in the app</p>
 
@@ -161,14 +161,14 @@ export default function BonikSystemSettings() {
   if (screen === "connectivity") {
     return (
       <Shell scale={scale}>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> settings</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> settings</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Printer & Connectivity</h2>
 
         <div className="font-mono text-[11px] uppercase tracking-widest mb-3" style={{ color: TOKENS.ink, opacity: 0.72 }}>Wi-Fi</div>
         <Card className="px-3.5 py-3 mb-6">
           <div className="flex items-center justify-between">
             <div><div className="font-sans text-[13px]" style={{ color: TOKENS.inkDeep }}>Shop_WiFi_5G</div><div className="font-mono text-[10px] mt-0.5" style={{ color: TOKENS.stamp }}>Connected</div></div>
-            <button className="font-mono text-[10px] underline" style={{ color: TOKENS.ink, opacity: 0.68 }}>change</button>
+            <button className="font-mono text-[10px] underline rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>change</button>
           </div>
         </Card>
 
@@ -193,7 +193,7 @@ export default function BonikSystemSettings() {
   if (screen === "printFormat") {
     return (
       <Shell scale={scale}>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> settings</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> settings</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Print / Invoice Format</h2>
 
         <div className="space-y-1 mb-6">
@@ -221,7 +221,7 @@ export default function BonikSystemSettings() {
   if (screen === "subscriptions") {
     return (
       <Shell scale={scale}>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> settings</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> settings</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Subscription</h2>
         <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>Off by default — turn on what you need. Needs a payment gateway to actually charge — toggles here aren't saved yet.</p>
         <div className="space-y-2">
@@ -250,7 +250,7 @@ export default function BonikSystemSettings() {
     ];
     return (
       <Shell scale={scale}>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> settings</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> settings</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Notifications</h2>
         <div className="space-y-1">
           {notifLoading && <div className="font-mono text-xs py-4" style={{ color: TOKENS.ink, opacity: 0.58 }}>Loading…</div>}
@@ -269,7 +269,7 @@ export default function BonikSystemSettings() {
   if (screen === "security") {
     return (
       <Shell scale={scale}>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> settings</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> settings</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Security</h2>
         <div className="space-y-1 mb-6">
           <div className="py-3" style={{ borderBottom: `1px solid ${TOKENS.line}` }}>
@@ -317,11 +317,11 @@ export default function BonikSystemSettings() {
   if (screen === "backup") {
     return (
       <Shell scale={scale}>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> settings</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> settings</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Backup & Data</h2>
         <div className="space-y-2 mb-6">
           <button className="w-full text-left px-4 py-3.5 rounded-2xl border-2 font-display font-semibold text-sm" style={{ borderColor: TOKENS.ink, color: TOKENS.inkDeep }}>Backup Now</button>
-          <button className="w-full text-left px-4 py-3.5 rounded-2xl border-2 font-display font-semibold text-sm" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }}>Restore From Backup</button>
+          <button className="w-full text-left px-4 py-3.5 rounded-2xl border-2 font-display font-semibold text-sm" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}>Restore From Backup</button>
         </div>
         <div className="font-mono text-[10px] mb-6" style={{ color: TOKENS.ink, opacity: 0.62 }}>
           Automatic cloud backup is coming in a future update — manual backup works today.
@@ -329,7 +329,7 @@ export default function BonikSystemSettings() {
         <div className="font-mono text-[11px] uppercase tracking-widest mb-3" style={{ color: TOKENS.ink, opacity: 0.72 }}>Export Data</div>
         <div className="grid grid-cols-3 gap-2">
           {["PDF", "Excel", "CSV"].map((f) => (
-            <button key={f} className="py-2.5 rounded-2xl border-2 font-mono text-[11px]" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }}>{f}</button>
+            <button key={f} className="py-2.5 rounded-2xl border-2 font-mono text-[11px]" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}>{f}</button>
           ))}
         </div>
       </Shell>
