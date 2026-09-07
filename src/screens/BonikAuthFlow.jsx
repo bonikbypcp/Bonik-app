@@ -74,7 +74,7 @@ function TextInput({ label, ...props }) {
       <FieldLabel>{label}</FieldLabel>
       <input
         {...props}
-        className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none transition-colors focus:border-current"
+        className="w-full border-0 border-b-2 rounded-t-lg px-3 pt-3 pb-3 text-[16px] font-sans outline-none transition-colors focus:border-current"
         style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}
         onFocus={(e) => (e.target.style.borderColor = TOKENS.saffron)}
         onBlur={(e) => (e.target.style.borderColor = TOKENS.line)}
@@ -89,7 +89,7 @@ function PrimaryButton({ children, onClick, disabled, type = "button" }) {
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className="w-full py-3.5 rounded-2xl font-display font-semibold text-[15px] tracking-wide transition-all active:scale-[0.98] disabled:opacity-40"
+      className="w-full py-4 rounded-2xl font-display font-semibold text-[16px] tracking-wide transition-all active:scale-[0.98] disabled:opacity-40"
       style={{ background: TOKENS.ink, color: TOKENS.paper }}
     >
       {children}
@@ -177,7 +177,7 @@ function Shell({ children }) {
         .slide-up { animation: slideUp 0.35s ease both; }
         input:-webkit-autofill { -webkit-text-fill-color: ${TOKENS.inkDeep}; }
       `}</style>
-      <div className="w-full max-w-[420px] min-h-screen px-6 pt-10 pb-16 relative">
+      <div className="w-full max-w-[420px] min-h-screen px-4 pt-6 pb-8 relative">
         {children}
       </div>
     </div>
@@ -484,7 +484,7 @@ export default function BonikAuthFlow() {
             </PrimaryButton>
             <button
               onClick={() => { setMode("register"); pushScreen("register"); }}
-              className="w-full py-3.5 rounded-2xl font-display font-semibold text-[15px] tracking-wide border-2 transition-all active:scale-[0.98]"
+              className="w-full py-4 rounded-2xl font-display font-semibold text-[16px] tracking-wide border-2 transition-all active:scale-[0.98]"
               style={{ borderColor: TOKENS.ink, color: TOKENS.ink, background: "#FFFFFF" }}
             >
               Create a Business
@@ -499,43 +499,45 @@ export default function BonikAuthFlow() {
   if (screen === "login") {
     return (
       <Shell>
-        <BackButton onClick={goBack} className="mb-8" />
-        <Wordmark />
-        <p className="font-sans text-sm mt-2 mb-6" style={{ color: TOKENS.ink, opacity: 0.75 }}>
-          Welcome back. Log in to your ledger.
-        </p>
-        <div
-          className="slide-up rounded-2xl p-5"
-          style={CARD_STYLE}
-        >
-          <TextInput
-            label="Email"
-            type="email"
-            value={loginForm.email}
-            onChange={(e) => setLoginForm((f) => ({ ...f, email: e.target.value }))}
-            placeholder="you@example.com"
-          />
-          <TextInput
-            label="Password"
-            type="password"
-            value={loginForm.password}
-            onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
-            placeholder="••••••••"
-          />
-          {loginError && (
-            <div className="mb-4 -mt-1 font-mono text-xs" style={{ color: TOKENS.due }}>
-              {loginError}
+        <BackButton onClick={goBack} className="mb-6" />
+        <div className="flex flex-col justify-center min-h-[78vh]">
+          <Wordmark />
+          <p className="font-sans text-sm mt-2 mb-6" style={{ color: TOKENS.ink, opacity: 0.75 }}>
+            Welcome back. Log in to your ledger.
+          </p>
+          <div
+            className="slide-up rounded-2xl px-5 py-6"
+            style={CARD_STYLE}
+          >
+            <TextInput
+              label="Email"
+              type="email"
+              value={loginForm.email}
+              onChange={(e) => setLoginForm((f) => ({ ...f, email: e.target.value }))}
+              placeholder="you@example.com"
+            />
+            <TextInput
+              label="Password"
+              type="password"
+              value={loginForm.password}
+              onChange={(e) => setLoginForm((f) => ({ ...f, password: e.target.value }))}
+              placeholder="••••••••"
+            />
+            {loginError && (
+              <div className="mb-4 -mt-1 font-mono text-xs" style={{ color: TOKENS.due }}>
+                {loginError}
+              </div>
+            )}
+            <div className="mb-6 -mt-2 text-right">
+              <span className="font-mono text-xs underline" style={{ color: TOKENS.saffronDeep }}>Forgot password?</span>
             </div>
-          )}
-          <div className="mb-6 -mt-2 text-right">
-            <span className="font-mono text-xs underline" style={{ color: TOKENS.saffronDeep }}>Forgot password?</span>
+            <PrimaryButton onClick={handleLogin} disabled={loginLoading || !loginForm.email || !loginForm.password}>
+              {loginLoading ? "Logging in…" : "Log In"}
+            </PrimaryButton>
+            <GhostButton onClick={() => { setMode("register"); pushScreen("register"); }}>
+              New here? Create a business →
+            </GhostButton>
           </div>
-          <PrimaryButton onClick={handleLogin} disabled={loginLoading || !loginForm.email || !loginForm.password}>
-            {loginLoading ? "Logging in…" : "Log In"}
-          </PrimaryButton>
-          <GhostButton onClick={() => { setMode("register"); pushScreen("register"); }}>
-            New here? Create a business →
-          </GhostButton>
         </div>
       </Shell>
     );
@@ -557,27 +559,29 @@ export default function BonikAuthFlow() {
     return (
       <Shell>
         <BackButton onClick={goBack} className="mb-6" />
-        <ProgressDots step={0} total={4} />
-        <div className="mb-6">
-          <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 1 of 4</div>
-          <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Create your account</h2>
-        </div>
-        <div className="slide-up rounded-2xl p-5" style={CARD_STYLE}>
-          <TextInput label="Full Name" value={form.fullName} onChange={setF("fullName")} placeholder="Ananya Sharma" />
-          <TextInput label="Mobile Number" value={form.mobile} onChange={setF("mobile")} placeholder="98xxxxxxxx" />
-          <TextInput label="Email Address" value={form.email} onChange={setF("email")} placeholder="you@example.com" />
-          <TextInput label="Password" type="password" value={form.password} onChange={setF("password")} placeholder="At least 6 characters" />
-          <TextInput label="Confirm Password" type="password" value={form.confirmPassword} onChange={setF("confirmPassword")} placeholder="Re-enter password" />
-          {form.confirmPassword && form.password !== form.confirmPassword && (
-            <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>Passwords don't match</p>
-          )}
-          {signUpError && (
-            <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>{signUpError}</p>
-          )}
-          <div className="mt-6">
-            <PrimaryButton disabled={!canSubmitAccount || signUpLoading} onClick={handleSignUp}>
-              {signUpLoading ? "Creating account…" : "Continue"}
-            </PrimaryButton>
+        <div className="flex flex-col justify-center min-h-[72vh]">
+          <ProgressDots step={0} total={4} />
+          <div className="mb-6">
+            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 1 of 4</div>
+            <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Create your account</h2>
+          </div>
+          <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
+            <TextInput label="Full Name" value={form.fullName} onChange={setF("fullName")} placeholder="Ananya Sharma" />
+            <TextInput label="Mobile Number" value={form.mobile} onChange={setF("mobile")} placeholder="98xxxxxxxx" />
+            <TextInput label="Email Address" value={form.email} onChange={setF("email")} placeholder="you@example.com" />
+            <TextInput label="Password" type="password" value={form.password} onChange={setF("password")} placeholder="At least 6 characters" />
+            <TextInput label="Confirm Password" type="password" value={form.confirmPassword} onChange={setF("confirmPassword")} placeholder="Re-enter password" />
+            {form.confirmPassword && form.password !== form.confirmPassword && (
+              <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>Passwords don't match</p>
+            )}
+            {signUpError && (
+              <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>{signUpError}</p>
+            )}
+            <div className="mt-6">
+              <PrimaryButton disabled={!canSubmitAccount || signUpLoading} onClick={handleSignUp}>
+                {signUpLoading ? "Creating account…" : "Continue"}
+              </PrimaryButton>
+            </div>
           </div>
         </div>
       </Shell>
@@ -589,27 +593,29 @@ export default function BonikAuthFlow() {
     return (
       <Shell>
         <BackButton onClick={goBack} className="mb-6" />
-        <ProgressDots step={1} total={4} />
-        <div className="mb-6">
-          <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 2 of 4</div>
-          <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Verify your email</h2>
-        </div>
-        <div className="slide-up rounded-2xl p-5 text-center" style={CARD_STYLE}>
-          <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
-            We've sent a confirmation link to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{form.email || "your email"}</span>.
-            Open your inbox and tap the link, then come back here and continue.
-          </p>
-          <PrimaryButton onClick={async () => {
-            const { data } = await supabase.auth.getSession();
-            if (!data.session) {
-              // clicking the emailed link may have confirmed the account without logging in this tab
-              await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
-            }
-            pushScreen("role");
-          }}>
-            I've Confirmed — Continue
-          </PrimaryButton>
-          <GhostButton onClick={handleSignUp}>Resend confirmation email</GhostButton>
+        <div className="flex flex-col justify-center min-h-[72vh]">
+          <ProgressDots step={1} total={4} />
+          <div className="mb-6">
+            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 2 of 4</div>
+            <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Verify your email</h2>
+          </div>
+          <div className="slide-up rounded-2xl px-5 py-6 text-center" style={CARD_STYLE}>
+            <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
+              We've sent a confirmation link to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{form.email || "your email"}</span>.
+              Open your inbox and tap the link, then come back here and continue.
+            </p>
+            <PrimaryButton onClick={async () => {
+              const { data } = await supabase.auth.getSession();
+              if (!data.session) {
+                // clicking the emailed link may have confirmed the account without logging in this tab
+                await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+              }
+              pushScreen("role");
+            }}>
+              I've Confirmed — Continue
+            </PrimaryButton>
+            <GhostButton onClick={handleSignUp}>Resend confirmation email</GhostButton>
+          </div>
         </div>
       </Shell>
     );
@@ -620,35 +626,37 @@ export default function BonikAuthFlow() {
     return (
       <Shell>
         <BackButton onClick={goBack} className="mb-6" />
-        <ProgressDots step={2} total={4} />
-        <div className="mb-6">
-          <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 3 of 4</div>
-          <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>What's your role?</h2>
-          <p className="font-sans text-sm mt-2" style={{ color: TOKENS.ink, opacity: 0.75 }}>This decides what BONIK sets up for you next.</p>
-        </div>
-        <div className="space-y-2.5 slide-up">
-          {ROLES.map((r) => (
-            <button
-              key={r.id}
-              onClick={() => setRole(r.id)}
-              className="w-full text-left px-4 py-3.5 rounded-2xl border-2 transition-all"
-              style={{
-                borderColor: role === r.id ? TOKENS.saffron : TOKENS.line,
-                background: role === r.id ? TOKENS.paperDeep : "#FFFFFF",
-              }}
+        <div className="flex flex-col justify-center min-h-[72vh]">
+          <ProgressDots step={2} total={4} />
+          <div className="mb-6">
+            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 3 of 4</div>
+            <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>What's your role?</h2>
+            <p className="font-sans text-sm mt-2" style={{ color: TOKENS.ink, opacity: 0.75 }}>This decides what BONIK sets up for you next.</p>
+          </div>
+          <div className="space-y-2.5 slide-up">
+            {ROLES.map((r) => (
+              <button
+                key={r.id}
+                onClick={() => setRole(r.id)}
+                className="w-full text-left px-4 py-4 rounded-2xl border-2 transition-all"
+                style={{
+                  borderColor: role === r.id ? TOKENS.saffron : TOKENS.line,
+                  background: role === r.id ? TOKENS.paperDeep : "#FFFFFF",
+                }}
+              >
+                <div className="font-display font-semibold text-[15px]" style={{ color: TOKENS.inkDeep }}>{r.title}</div>
+                <div className="font-mono text-xs mt-0.5" style={{ color: TOKENS.ink, opacity: 0.72 }}>{r.note}</div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-8">
+            <PrimaryButton
+              disabled={!role}
+              onClick={() => pushScreen(role === "owner" ? "bizProfile" : "pendingApproval")}
             >
-              <div className="font-display font-semibold text-[15px]" style={{ color: TOKENS.inkDeep }}>{r.title}</div>
-              <div className="font-mono text-xs mt-0.5" style={{ color: TOKENS.ink, opacity: 0.72 }}>{r.note}</div>
-            </button>
-          ))}
-        </div>
-        <div className="mt-8">
-          <PrimaryButton
-            disabled={!role}
-            onClick={() => pushScreen(role === "owner" ? "bizProfile" : "pendingApproval")}
-          >
-            Continue
-          </PrimaryButton>
+              Continue
+            </PrimaryButton>
+          </div>
         </div>
       </Shell>
     );
@@ -733,55 +741,57 @@ export default function BonikAuthFlow() {
     return (
       <Shell>
         <BackButton onClick={goBack} className="mb-6" />
-        <ProgressDots step={3} total={4} />
-        <div className="mb-6">
-          <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 4 of 4</div>
-          <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Set up your business</h2>
-        </div>
-        <div className="slide-up rounded-2xl p-5" style={CARD_STYLE}>
-          <TextInput label="Business Name" value={biz.name} onChange={setB("name")} placeholder="Sharma General Store" />
-
-          <div className="mb-4">
-            <FieldLabel>Business Category</FieldLabel>
-            <div className="flex flex-wrap gap-2 mt-1">
-              {CATEGORIES.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setBiz((p) => ({ ...p, category: c }))}
-                  className="px-3 py-1.5 rounded-full font-mono text-xs border-2 transition-all"
-                  style={{
-                    borderColor: biz.category === c ? TOKENS.saffron : TOKENS.line,
-                    background: biz.category === c ? TOKENS.paperDeep : "#FFFFFF",
-                    color: TOKENS.inkDeep,
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <TextInput label="Owner Name" value={biz.ownerName} onChange={setB("ownerName")} placeholder="Full name" />
-          <TextInput label="Mobile Number" value={biz.mobile} onChange={setB("mobile")} placeholder="98xxxxxxxx" />
-          <TextInput label="Business Address" value={biz.address} onChange={setB("address")} placeholder="Shop no, street, city" />
-          <TextInput label="GST Number (Optional)" value={biz.gst} onChange={setB("gst")} placeholder="22AAAAA0000A1Z5" />
-
+        <div className="flex flex-col justify-center min-h-[72vh]">
+          <ProgressDots step={3} total={4} />
           <div className="mb-6">
-            <FieldLabel>Shop Photo (Optional)</FieldLabel>
-            <button
-              className="w-full py-4 rounded-2xl border-2 border-dashed font-mono text-xs"
-              style={{ borderColor: TOKENS.line, color: TOKENS.ink, opacity: 0.72, background: "#FFFFFF" }}
-            >
-              Tap to take or upload a shop photo — this doubles as your business logo
-            </button>
+            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 4 of 4</div>
+            <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Set up your business</h2>
           </div>
+          <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
+            <TextInput label="Business Name" value={biz.name} onChange={setB("name")} placeholder="Sharma General Store" />
 
-          {bizError && (
-            <p className="font-mono text-xs mb-4" style={{ color: TOKENS.due }}>{bizError}</p>
-          )}
-          <PrimaryButton disabled={!canSubmitBiz || bizLoading} onClick={handleCreateBusiness}>
-            {bizLoading ? "Creating…" : "Create Business"}
-          </PrimaryButton>
+            <div className="mb-4">
+              <FieldLabel>Business Category</FieldLabel>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setBiz((p) => ({ ...p, category: c }))}
+                    className="px-3 py-2 rounded-full font-mono text-xs border-2 transition-all"
+                    style={{
+                      borderColor: biz.category === c ? TOKENS.saffron : TOKENS.line,
+                      background: biz.category === c ? TOKENS.paperDeep : "#FFFFFF",
+                      color: TOKENS.inkDeep,
+                    }}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <TextInput label="Owner Name" value={biz.ownerName} onChange={setB("ownerName")} placeholder="Full name" />
+            <TextInput label="Mobile Number" value={biz.mobile} onChange={setB("mobile")} placeholder="98xxxxxxxx" />
+            <TextInput label="Business Address" value={biz.address} onChange={setB("address")} placeholder="Shop no, street, city" />
+            <TextInput label="GST Number (Optional)" value={biz.gst} onChange={setB("gst")} placeholder="22AAAAA0000A1Z5" />
+
+            <div className="mb-6">
+              <FieldLabel>Shop Photo (Optional)</FieldLabel>
+              <button
+                className="w-full py-4 rounded-2xl border-2 border-dashed font-mono text-xs"
+                style={{ borderColor: TOKENS.line, color: TOKENS.ink, opacity: 0.72, background: "#FFFFFF" }}
+              >
+                Tap to take or upload a shop photo — this doubles as your business logo
+              </button>
+            </div>
+
+            {bizError && (
+              <p className="font-mono text-xs mb-4" style={{ color: TOKENS.due }}>{bizError}</p>
+            )}
+            <PrimaryButton disabled={!canSubmitBiz || bizLoading} onClick={handleCreateBusiness}>
+              {bizLoading ? "Creating…" : "Create Business"}
+            </PrimaryButton>
+          </div>
         </div>
       </Shell>
     );
