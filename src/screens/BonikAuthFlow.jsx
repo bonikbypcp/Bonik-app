@@ -16,6 +16,20 @@ const TOKENS = {
   ink: "#122A4E", inkDeep: "#0A1930", paper: "#DCE4F0", paperDeep: "#FBEED9",
   saffron: "#D9A231", saffronDeep: "#B87F15", stamp: "#1E7A4C", due: "#C2392F",
   line: "#D3D9E3", slate: "#516072", blue: "#2E5FA3",
+  // A separate, noticeably richer/darker shade for this flow's own page
+  // background — TOKENS.paper (used elsewhere, e.g. as button text color)
+  // was too close in tone to white, so the white form cards read as
+  // duller than the page instead of popping forward from it.
+  pageBg: "#AFC0DD",
+};
+// Shared "the form card" treatment for every data-entry step (login,
+// register, verify, business profile) — a strong shadow plus a hairline
+// border so the white card clearly separates from pageBg instead of just
+// blending into it.
+const CARD_STYLE = {
+  background: "#FFFFFF",
+  boxShadow: "0 18px 40px rgba(10,25,48,0.28), 0 2px 8px rgba(10,25,48,0.12)",
+  border: "1px solid rgba(10,25,48,0.06)",
 };
 
 function Stitch({ className = "" }) {
@@ -143,7 +157,7 @@ function Shell({ children }) {
   return (
     <div
       className="min-h-screen w-full flex items-start justify-center font-sans"
-      style={{ background: TOKENS.paper }}
+      style={{ background: TOKENS.pageBg }}
     >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
@@ -492,7 +506,7 @@ export default function BonikAuthFlow() {
         </p>
         <div
           className="slide-up rounded-2xl p-5"
-          style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(10,25,48,0.10)" }}
+          style={CARD_STYLE}
         >
           <TextInput
             label="Email"
@@ -548,7 +562,7 @@ export default function BonikAuthFlow() {
           <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 1 of 4</div>
           <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Create your account</h2>
         </div>
-        <div className="slide-up rounded-2xl p-5" style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(10,25,48,0.10)" }}>
+        <div className="slide-up rounded-2xl p-5" style={CARD_STYLE}>
           <TextInput label="Full Name" value={form.fullName} onChange={setF("fullName")} placeholder="Ananya Sharma" />
           <TextInput label="Mobile Number" value={form.mobile} onChange={setF("mobile")} placeholder="98xxxxxxxx" />
           <TextInput label="Email Address" value={form.email} onChange={setF("email")} placeholder="you@example.com" />
@@ -580,7 +594,7 @@ export default function BonikAuthFlow() {
           <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 2 of 4</div>
           <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Verify your email</h2>
         </div>
-        <div className="slide-up rounded-2xl p-5 text-center" style={{ background: "#FFFFFF", boxShadow: "0 2px 10px rgba(10,25,48,0.10)" }}>
+        <div className="slide-up rounded-2xl p-5 text-center" style={CARD_STYLE}>
           <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
             We've sent a confirmation link to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{form.email || "your email"}</span>.
             Open your inbox and tap the link, then come back here and continue.
@@ -724,7 +738,7 @@ export default function BonikAuthFlow() {
           <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 4 of 4</div>
           <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Set up your business</h2>
         </div>
-        <div className="slide-up">
+        <div className="slide-up rounded-2xl p-5" style={CARD_STYLE}>
           <TextInput label="Business Name" value={biz.name} onChange={setB("name")} placeholder="Sharma General Store" />
 
           <div className="mb-4">
