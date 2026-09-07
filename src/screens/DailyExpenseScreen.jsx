@@ -201,7 +201,7 @@ export default function BonikDailyExpenseScreen() {
           />
         )}
         {needsDescription && (
-          <TextInput label="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Electricity, furniture, internet…" />
+          <TextInput label="Description" value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Electricity, furniture, internet…" autoCapitalize="sentences" />
         )}
 
         <div className="mt-6">

@@ -293,11 +293,11 @@ export default function BonikLedgerScreen() {
         <h2 className="font-display font-semibold text-xl mb-6 capitalize" style={{ color: TOKENS.inkDeep }}>
           Add {addingType}
         </h2>
-        <TextInput label="Name" value={newAccount.name} onChange={(e) => setNewAccount((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" />
+        <TextInput label="Name" value={newAccount.name} onChange={(e) => setNewAccount((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" autoCapitalize="words" />
         <TextInput label="Mobile Number" value={newAccount.mobile} onChange={(e) => setNewAccount((p) => ({ ...p, mobile: e.target.value }))} placeholder="98xxxxxxxx" />
-        <TextInput label="Address" value={newAccount.address} onChange={(e) => setNewAccount((p) => ({ ...p, address: e.target.value }))} placeholder="Shop / area / locality" />
+        <TextInput label="Address" value={newAccount.address} onChange={(e) => setNewAccount((p) => ({ ...p, address: e.target.value }))} placeholder="Shop / area / locality" autoCapitalize="words" />
         {addingType === "staff" && (
-          <TextInput label="Designation (Optional)" value={newAccount.designation} onChange={(e) => setNewAccount((p) => ({ ...p, designation: e.target.value }))} placeholder="Cashier, Manager…" />
+          <TextInput label="Designation (Optional)" value={newAccount.designation} onChange={(e) => setNewAccount((p) => ({ ...p, designation: e.target.value }))} placeholder="Cashier, Manager…" autoCapitalize="words" />
         )}
         {addingType === "transport" && (
           <div className="mb-4">
@@ -374,7 +374,7 @@ export default function BonikLedgerScreen() {
           <>
             <TextInput label="Date" value={genericForm.date} onChange={(e) => setGenericForm((f) => ({ ...f, date: e.target.value }))} />
             <TextInput label="Amount" type="number" value={genericForm.amount} onChange={(e) => setGenericForm((f) => ({ ...f, amount: e.target.value }))} placeholder="₹0" />
-            <TextInput label="Note (Optional)" value={genericForm.note} onChange={(e) => setGenericForm((f) => ({ ...f, note: e.target.value }))} placeholder={tab === "supplier" ? "Payment made" : addMode === "incoming" ? "Payment received" : "Goods given"} />
+            <TextInput label="Note (Optional)" value={genericForm.note} onChange={(e) => setGenericForm((f) => ({ ...f, note: e.target.value }))} placeholder={tab === "supplier" ? "Payment made" : addMode === "incoming" ? "Payment received" : "Goods given"} autoCapitalize="sentences" />
             {saveError && <div className="mb-3 px-3 py-2 rounded-xl font-mono text-[11px]" style={{ background: "#FDECEC", color: TOKENS.due }}>{saveError}</div>}
             <div className="mt-6">
               <button

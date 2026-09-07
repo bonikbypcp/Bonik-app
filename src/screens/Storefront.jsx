@@ -339,12 +339,12 @@ export default function BonikStorefront() {
           )}
           {!knownCustomer && isNewCustomer && (
             <>
-              <TextInput label="Your Name" value={checkoutForm.name} onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))} placeholder="Full name" />
+              <TextInput label="Your Name" value={checkoutForm.name} onChange={(e) => setCheckoutForm((f) => ({ ...f, name: e.target.value }))} placeholder="Full name" autoCapitalize="words" />
               <TextInput label="Mobile Number" value={checkoutForm.mobile} onChange={(e) => setCheckoutForm((f) => ({ ...f, mobile: e.target.value }))} placeholder="98xxxxxxxx" />
             </>
           )}
-          <TextInput label="Delivery Address" value={checkoutForm.address} onChange={(e) => setCheckoutForm((f) => ({ ...f, address: e.target.value }))} placeholder="House, street, landmark" />
-          <TextInput label="Note (Optional)" value={checkoutForm.note} onChange={(e) => setCheckoutForm((f) => ({ ...f, note: e.target.value }))} placeholder="Any instructions" />
+          <TextInput label="Delivery Address" value={checkoutForm.address} onChange={(e) => setCheckoutForm((f) => ({ ...f, address: e.target.value }))} placeholder="House, street, landmark" autoCapitalize="words" />
+          <TextInput label="Note (Optional)" value={checkoutForm.note} onChange={(e) => setCheckoutForm((f) => ({ ...f, note: e.target.value }))} placeholder="Any instructions" autoCapitalize="sentences" />
 
           {/* Bill-style order summary */}
           <div className="border-2 rounded-2xl overflow-hidden mt-2 mb-6" style={{ borderColor: TOKENS.ink }}>

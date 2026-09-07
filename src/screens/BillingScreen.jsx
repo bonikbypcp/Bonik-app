@@ -289,9 +289,9 @@ export default function BonikBillingScreen() {
         </button>
         <h2 className="font-display font-semibold text-xl mb-6 px-1" style={{ color: TOKENS.inkDeep }}>Add Customer</h2>
         <div className="px-1">
-          <TextInput label="Customer Name" value={newCustomer.name} onChange={(e) => setNewCustomer((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" />
+          <TextInput label="Customer Name" value={newCustomer.name} onChange={(e) => setNewCustomer((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" autoCapitalize="words" />
           <TextInput label="Mobile Number" value={newCustomer.mobile} onChange={(e) => setNewCustomer((p) => ({ ...p, mobile: e.target.value }))} placeholder="98xxxxxxxx" />
-          <TextInput label="Shop Address (Optional)" value={newCustomer.address} onChange={(e) => setNewCustomer((p) => ({ ...p, address: e.target.value }))} placeholder="Area / locality" />
+          <TextInput label="Shop Address (Optional)" value={newCustomer.address} onChange={(e) => setNewCustomer((p) => ({ ...p, address: e.target.value }))} placeholder="Area / locality" autoCapitalize="words" />
           <div className="mt-6">
             <button
               disabled={!canSubmit}

@@ -272,6 +272,7 @@ export default function BonikDailyProductScreen() {
               value={form.productName}
               onChange={(e) => setForm((f) => ({ ...f, productName: e.target.value }))}
               placeholder="type the product name"
+              autoCapitalize="words"
               className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none"
               style={{ borderColor: TOKENS.saffron, color: TOKENS.inkDeep }}
             />
@@ -302,7 +303,7 @@ export default function BonikDailyProductScreen() {
         <TextInput label="Lot Number (Optional)" value={form.lot} onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))} />
         <TextInput label="Transport Number (Optional)" value={form.transport} onChange={(e) => setForm((f) => ({ ...f, transport: e.target.value }))} />
         <TextInput label="Weight in KG (Optional)" type="number" value={form.weight} onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))} />
-        <TextInput label="Notes (Optional)" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+        <TextInput label="Notes (Optional)" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} autoCapitalize="sentences" />
 
         {submitError && <div className="mb-3 px-3 py-2 rounded-xl font-mono text-[11px]" style={{ background: "#FDECEC", color: TOKENS.due }}>{submitError}</div>}
         <div className="mt-6">
@@ -421,7 +422,7 @@ export default function BonikDailyProductScreen() {
           </div>
         </div>
         <TextInput label="Quantity" type="number" value={returnForm.qty} onChange={(e) => setReturnForm((f) => ({ ...f, qty: e.target.value }))} placeholder="0" />
-        <TextInput label="Reason (Optional)" value={returnForm.reason} onChange={(e) => setReturnForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Damaged, wrong item…" />
+        <TextInput label="Reason (Optional)" value={returnForm.reason} onChange={(e) => setReturnForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Damaged, wrong item…" autoCapitalize="sentences" />
 
         {submitError && <div className="mb-3 px-3 py-2 rounded-xl font-mono text-[11px]" style={{ background: "#FDECEC", color: TOKENS.due }}>{submitError}</div>}
         <div className="mt-6">

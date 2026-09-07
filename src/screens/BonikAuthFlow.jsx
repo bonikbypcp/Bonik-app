@@ -378,6 +378,43 @@ export default function BonikAuthFlow() {
     pushScreen("verify");
   };
 
+  const [verifyChecking, setVerifyChecking] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+
+  // "I've Confirmed — Continue" used to push straight on to "role" no
+  // matter what signInWithPassword did — if the confirmation link hadn't
+  // actually been clicked yet (or signInWithPassword failed for any other
+  // reason), its error was silently dropped and the user sailed through
+  // role -> bizProfile with no session at all. That's what surfaced two
+  // screens later as a confusing "session expired" on Create Business,
+  // even for someone who'd just finished step 1 seconds earlier — they
+  // were never actually signed in on this step, not "expired". Now this
+  // step itself verifies a session exists before advancing, and reports
+  // the real problem inline if it doesn't.
+  const handleConfirmContinue = async () => {
+    setVerifyError("");
+    setVerifyChecking(true);
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) {
+      // clicking the emailed link may have confirmed the account without logging in this tab
+      const { error: signInErr } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      });
+      if (signInErr) {
+        setVerifyChecking(false);
+        setVerifyError(
+          signInErr.message?.toLowerCase().includes("confirm")
+            ? "Looks like the confirmation link hasn't been clicked yet — open the email and tap it, then try again."
+            : signInErr.message
+        );
+        return;
+      }
+    }
+    setVerifyChecking(false);
+    pushScreen("role");
+  };
+
   const canSubmitBiz = biz.name && biz.category && biz.ownerName && biz.mobile;
   const [bizLoading, setBizLoading] = useState(false);
   const [bizError, setBizError] = useState("");
@@ -399,9 +436,20 @@ export default function BonikAuthFlow() {
     // combined with an event-handler throw being invisible to a render-only
     // ErrorBoundary, look exactly like nothing happened.
     try {
-      const { data: userData, error: userErr } = await supabase.auth.getUser();
-      const uid = userData?.user?.id;
-      if (userErr || !uid) {
+      // getSession() reads the locally persisted session first and
+      // transparently refreshes it if the access token is near expiry —
+      // that's the common, fast path for "just went through steps 1-3
+      // seconds ago". getUser() below (a real network round-trip to
+      // revalidate against the auth server) is only a fallback for the
+      // rarer case where getSession() has nothing local to work with;
+      // relying on getUser() alone as the sole check meant one transient
+      // network hiccup was enough to falsely declare the session expired.
+      let uid = (await supabase.auth.getSession()).data.session?.user?.id;
+      if (!uid) {
+        const { data: userData } = await supabase.auth.getUser();
+        uid = userData?.user?.id;
+      }
+      if (!uid) {
         setBizError("Your session expired — please log in again.");
         return;
       }
@@ -566,7 +614,7 @@ export default function BonikAuthFlow() {
             <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Create your account</h2>
           </div>
           <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
-            <TextInput label="Full Name" value={form.fullName} onChange={setF("fullName")} placeholder="Ananya Sharma" />
+            <TextInput label="Full Name" value={form.fullName} onChange={setF("fullName")} placeholder="Ananya Sharma" autoCapitalize="words" />
             <TextInput label="Mobile Number" value={form.mobile} onChange={setF("mobile")} placeholder="98xxxxxxxx" />
             <TextInput label="Email Address" value={form.email} onChange={setF("email")} placeholder="you@example.com" />
             <TextInput label="Password" type="password" value={form.password} onChange={setF("password")} placeholder="At least 6 characters" />
@@ -604,15 +652,11 @@ export default function BonikAuthFlow() {
               We've sent a confirmation link to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{form.email || "your email"}</span>.
               Open your inbox and tap the link, then come back here and continue.
             </p>
-            <PrimaryButton onClick={async () => {
-              const { data } = await supabase.auth.getSession();
-              if (!data.session) {
-                // clicking the emailed link may have confirmed the account without logging in this tab
-                await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
-              }
-              pushScreen("role");
-            }}>
-              I've Confirmed — Continue
+            {verifyError && (
+              <p className="font-mono text-xs mb-4" style={{ color: TOKENS.due }}>{verifyError}</p>
+            )}
+            <PrimaryButton onClick={handleConfirmContinue} disabled={verifyChecking}>
+              {verifyChecking ? "Checking…" : "I've Confirmed — Continue"}
             </PrimaryButton>
             <GhostButton onClick={handleSignUp}>Resend confirmation email</GhostButton>
           </div>
@@ -748,7 +792,7 @@ export default function BonikAuthFlow() {
             <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Set up your business</h2>
           </div>
           <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
-            <TextInput label="Business Name" value={biz.name} onChange={setB("name")} placeholder="Sharma General Store" />
+            <TextInput label="Business Name" value={biz.name} onChange={setB("name")} placeholder="Sharma General Store" autoCapitalize="words" />
 
             <div className="mb-4">
               <FieldLabel>Business Category</FieldLabel>
@@ -770,9 +814,9 @@ export default function BonikAuthFlow() {
               </div>
             </div>
 
-            <TextInput label="Owner Name" value={biz.ownerName} onChange={setB("ownerName")} placeholder="Full name" />
+            <TextInput label="Owner Name" value={biz.ownerName} onChange={setB("ownerName")} placeholder="Full name" autoCapitalize="words" />
             <TextInput label="Mobile Number" value={biz.mobile} onChange={setB("mobile")} placeholder="98xxxxxxxx" />
-            <TextInput label="Business Address" value={biz.address} onChange={setB("address")} placeholder="Shop no, street, city" />
+            <TextInput label="Business Address" value={biz.address} onChange={setB("address")} placeholder="Shop no, street, city" autoCapitalize="words" />
             <TextInput label="GST Number (Optional)" value={biz.gst} onChange={setB("gst")} placeholder="22AAAAA0000A1Z5" />
 
             <div className="mb-6">

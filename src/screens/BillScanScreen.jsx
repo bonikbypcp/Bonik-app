@@ -159,7 +159,7 @@ export default function BonikBillScanScreen() {
           {reviewItems.map((it, i) => (
             <Card key={i} className="px-3.5 py-3">
               <div className="flex items-center gap-2 mb-2">
-                <input value={it.name} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Item name"
+                <input value={it.name} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Item name" autoCapitalize="words"
                   className="flex-1 bg-transparent border-0 border-b-2 pb-1 text-[13px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
                 <button onClick={() => removeItem(i)}><Trash2 size={14} color={TOKENS.due} /></button>
               </div>
@@ -319,7 +319,7 @@ function CleanupScreen({ businessId, onBack }) {
       {selectedNames.length > 0 && (
         <div className="mb-6">
           <div className="font-mono text-[10px] uppercase tracking-wide mb-1.5" style={{ color: TOKENS.ink, opacity: 0.72 }}>Correct Spelling</div>
-          <input value={referenceName} onChange={(e) => setReferenceName(e.target.value)}
+          <input value={referenceName} onChange={(e) => setReferenceName(e.target.value)} autoCapitalize="words"
             className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none mb-2" style={{ borderColor: TOKENS.saffron, color: TOKENS.inkDeep }} />
           <div className="font-mono text-[9.5px]" style={{ color: TOKENS.ink, opacity: 0.58 }}>
             {selectedNames.filter((n) => n !== referenceName).length} item name(s) will be renamed to this
