@@ -209,47 +209,60 @@ export default function BonikAuthFlow() {
   const { refreshMember } = useSession();
   const [screen, setScreen] = useState("landing");
 
-  // Internal back-navigation. screenStackRef tracks the real steps the user
-  // has actually visited (landing, login, register, verify, role,
-  // pendingApproval, bizProfile, success) — "roleGate" is deliberately never
-  // pushed onto it, since it's a transient auto-redirect rather than a step
-  // the user consciously took, so back-ing out of whatever it resolves to
-  // correctly lands on the step before it (e.g. "login"), not on a loading
-  // spinner. Each push also claims one browser history entry via
-  // pushState, so the physical/device back button and our in-app "Back"
-  // buttons go through the exact same code path below (goBack just calls
-  // history.back(); the popstate listener is what actually pops the
-  // stack) — that's what keeps a browser back press from leaving /auth
-  // outright while this flow is still in progress.
-  const screenStackRef = useRef(["landing"]);
-
+  // Internal back-navigation. Each step the user takes claims one browser
+  // history entry via pushState, with the SCREEN NAME ITSELF written into
+  // that entry's state — not into a separately-kept in-memory stack. That
+  // used to be the bug here: a parallel `screenStackRef` array tracked
+  // "how many steps deep are we", but that array lives only in this
+  // component's memory, while the browser's real history entries persist
+  // independently of it. Any reload, backgrounded-tab reload (routine on
+  // mobile), or remount reset the in-memory stack back to depth 1 while
+  // the browser still had several real entries left over from before —
+  // so the first few back presses matched nothing in the (now-empty)
+  // stack, changed nothing on screen, and silently burned through those
+  // leftover entries anyway, until they ran out and the browser exited
+  // outright after 2-3 presses. Reading the screen name straight out of
+  // `event.state` on each popstate removes the parallel structure
+  // entirely — window.history.state is the browser's own durably-kept
+  // record of each entry, so there's nothing left that can drift out of
+  // sync with it.
+  //
+  // "roleGate" is deliberately never pushed as its own entry (it's a
+  // transient auto-redirect, not a step the user consciously took), so
+  // back-ing out of whatever it resolves to correctly lands on the step
+  // before it (e.g. "login"), not on a loading spinner.
   const pushScreen = useCallback((next) => {
-    screenStackRef.current.push(next);
-    window.history.pushState({ bonikAuthStep: screenStackRef.current.length }, "");
+    window.history.pushState({ bonikAuthScreen: next }, "");
     setScreen(next);
   }, []);
 
   const goBack = useCallback(() => {
+    // Goes through the exact same code path as the physical/device back
+    // button — this just calls history.back(); the popstate listener
+    // below is the single place that actually changes `screen`.
     window.history.back();
   }, []);
 
   useEffect(() => {
-    // Claim one history entry for the flow's starting point so the very
-    // first back press (in-app or physical) has something of ours to land
-    // on instead of immediately leaving /auth.
-    window.history.replaceState({ bonikAuthStep: 1 }, "");
+    // Tag the entry we land on at mount as "landing", so popping back to
+    // it (by device button or in-app Back) resolves correctly even if
+    // this component has just remounted (e.g. after a reload) with no
+    // memory of anything that came before.
+    window.history.replaceState({ bonikAuthScreen: "landing" }, "");
 
-    const onPopState = () => {
-      const stack = screenStackRef.current;
-      if (stack.length > 1) {
-        stack.pop();
-        setScreen(stack[stack.length - 1]);
+    const onPopState = (event) => {
+      const next = event.state?.bonikAuthScreen;
+      if (next) {
+        setScreen(next);
       }
-      // Already back at "landing" — nothing left of ours to pop, so this
-      // and any further back presses behave normally (leave /auth). This
-      // is also what makes the interception end once the flow is complete:
-      // navigating to /home unmounts this component, and the cleanup below
-      // removes this listener, so browser back works normally again.
+      // No bonikAuthScreen on the entry we've landed on means we've gone
+      // past the start of this flow (or this entry predates it) — nothing
+      // of ours to restore, so this and any further back presses behave
+      // normally, which is what lets a back press genuinely exit once the
+      // user is on the very first step. This is also what makes the
+      // interception end once the flow is complete: navigating to /home
+      // unmounts this component, and the cleanup below removes this
+      // listener, so browser back works normally again from then on.
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
