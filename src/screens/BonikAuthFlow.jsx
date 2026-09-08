@@ -287,6 +287,38 @@ export default function BonikAuthFlow() {
     }
     setScreen("roleGate");
   };
+
+  // ---- Forgot password ----
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
+
+  // redirectTo must be on Supabase's Auth → URL Configuration →
+  // "Redirect URLs" allow-list (add both the production origin,
+  // https://bonik-app.vercel.app, and http://localhost:5173 for local
+  // dev) or Supabase silently redirects the clicked link to its own
+  // default error page instead of here, even though the email itself
+  // still sends fine. Using window.location.origin instead of a
+  // hardcoded string means this resolves correctly on whichever origin
+  // the app is actually running on (production, a preview deploy, or
+  // localhost) without needing a code change per environment — but each
+  // one of those origins still has to be added to that allow-list once.
+  const handleForgotPassword = async () => {
+    if (!forgotEmail || forgotLoading) return;
+    setForgotError("");
+    setForgotLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setForgotLoading(false);
+    if (error) {
+      setForgotError(error.message);
+      return;
+    }
+    setForgotSent(true);
+  };
+
   const [role, setRole] = useState(null);
   const [roleGateChecking, setRoleGateChecking] = useState(true);
   const [pendingRequest, setPendingRequest] = useState(null); // this user's own pending join_requests row, if any
@@ -590,7 +622,14 @@ export default function BonikAuthFlow() {
               </div>
             )}
             <div className="mb-6 -mt-2 text-right">
-              <span className="font-mono text-xs underline" style={{ color: TOKENS.saffronDeep }}>Forgot password?</span>
+              <button
+                type="button"
+                onClick={() => { setForgotEmail(loginForm.email); setForgotError(""); setForgotSent(false); pushScreen("forgotPassword"); }}
+                className="font-mono text-xs underline"
+                style={{ color: TOKENS.saffronDeep }}
+              >
+                Forgot password?
+              </button>
             </div>
             <PrimaryButton onClick={handleLogin} disabled={loginLoading || !loginForm.email || !loginForm.password}>
               {loginLoading ? "Logging in…" : "Log In"}
@@ -598,6 +637,53 @@ export default function BonikAuthFlow() {
             <GhostButton onClick={() => { setMode("register"); pushScreen("register"); }}>
               New here? Create a business →
             </GhostButton>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  // ---------- FORGOT PASSWORD ----------
+  if (screen === "forgotPassword") {
+    return (
+      <Shell>
+        <BackButton onClick={goBack} className="mb-6" />
+        <div className="flex flex-col justify-center min-h-[78vh]">
+          <Wordmark />
+          <p className="font-sans text-sm mt-2 mb-6" style={{ color: TOKENS.ink, opacity: 0.75 }}>
+            {forgotSent
+              ? "Check your inbox for the reset link."
+              : "Enter your account email and we'll send you a link to reset your password."}
+          </p>
+          <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
+            {forgotSent ? (
+              <>
+                <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
+                  We've sent a password reset link to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{forgotEmail}</span>.
+                  Open it on this device to set a new password, then come back here and log in.
+                </p>
+                <PrimaryButton onClick={goBack}>Back to Log In</PrimaryButton>
+                <GhostButton onClick={handleForgotPassword}>Resend link</GhostButton>
+              </>
+            ) : (
+              <>
+                <TextInput
+                  label="Email"
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="you@example.com"
+                />
+                {forgotError && (
+                  <div className="mb-4 -mt-1 font-mono text-xs" style={{ color: TOKENS.due }}>
+                    {forgotError}
+                  </div>
+                )}
+                <PrimaryButton onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail}>
+                  {forgotLoading ? "Sending…" : "Send Reset Link"}
+                </PrimaryButton>
+              </>
+            )}
           </div>
         </div>
       </Shell>

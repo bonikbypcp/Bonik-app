@@ -34,6 +34,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SessionProvider, useSession } from "./lib/session";
 
 import BonikAuthFlow from "./screens/BonikAuthFlow";
+import ResetPasswordScreen from "./screens/ResetPasswordScreen";
 import HomeScreen from "./screens/HomeScreen";
 import BillingScreen from "./screens/BillingScreen";
 import LedgerScreen from "./screens/LedgerScreen";
@@ -109,6 +110,12 @@ function AppRoutes() {
       {/* Auth: login, register, and business creation all live inside this one flow */}
       <Route path="/" element={<Navigate to="/auth" replace />} />
       <Route path="/auth" element={<BonikAuthFlow />} />
+      {/* Where Supabase's password-reset email links back to — see
+          BonikAuthFlow's "Forgot password?" step, which sets that as
+          resetPasswordForEmail's redirectTo. Public, like /auth: the user
+          isn't logged in via the normal flow yet when they land here,
+          just carrying a short-lived recovery session in the URL. */}
+      <Route path="/reset-password" element={<ResetPasswordScreen />} />
 
       {/* Business Owner / Staff app — needs login + an active business membership */}
       <Route path="/home" element={<ProtectedRoute><HomeScreen /></ProtectedRoute>} />
