@@ -393,11 +393,32 @@ export default function BonikAuthFlow() {
   const setB = set(biz, setBiz);
 
   const handleOtp = (i, val) => {
-    if (!/^[0-9]?$/.test(val)) return;
+    // Handles pasting the whole 6-digit code at once (a very normal way
+    // to get it out of an email) as well as typing one digit at a time.
+    const digits = val.replace(/\D/g, "");
+    if (!digits) {
+      if (val === "") {
+        const next = [...otp];
+        next[i] = "";
+        setOtp(next);
+      }
+      return;
+    }
     const next = [...otp];
-    next[i] = val;
+    let cursor = i;
+    for (const d of digits) {
+      if (cursor > 5) break;
+      next[cursor] = d;
+      cursor++;
+    }
     setOtp(next);
-    if (val && i < 5) otpRefs.current[i + 1]?.focus();
+    otpRefs.current[Math.min(cursor, 5)]?.focus();
+  };
+
+  const handleOtpBackspace = (i, e) => {
+    if (e.key === "Backspace" && !otp[i] && i > 0) {
+      otpRefs.current[i - 1]?.focus();
+    }
   };
 
   const canSubmitAccount =
@@ -420,44 +441,75 @@ export default function BonikAuthFlow() {
       setSignUpError(error.message);
       return;
     }
+    // Clear state left over from any earlier attempt (a previous email's
+    // typed-in digits, or an error from a previous wrong code) so the OTP
+    // step always starts from a clean slate for this signup.
+    setOtp(["", "", "", "", "", ""]);
+    setVerifyError("");
+    setResendMessage("");
     pushScreen("verify");
   };
 
   const [verifyChecking, setVerifyChecking] = useState(false);
   const [verifyError, setVerifyError] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
-  // "I've Confirmed — Continue" used to push straight on to "role" no
-  // matter what signInWithPassword did — if the confirmation link hadn't
-  // actually been clicked yet (or signInWithPassword failed for any other
-  // reason), its error was silently dropped and the user sailed through
-  // role -> bizProfile with no session at all. That's what surfaced two
-  // screens later as a confusing "session expired" on Create Business,
-  // even for someone who'd just finished step 1 seconds earlier — they
-  // were never actually signed in on this step, not "expired". Now this
-  // step itself verifies a session exists before advancing, and reports
-  // the real problem inline if it doesn't.
-  const handleConfirmContinue = async () => {
+  // Signup verification uses the 6-digit OTP from the "Confirm signup"
+  // email (see the OTP boxes below), not the magic link Supabase also
+  // puts in that same email — a link has to redirect back to whatever
+  // origin the app happens to be running on (production, a preview
+  // deploy, localhost, each with its own URL that has to be individually
+  // allow-listed in Supabase's Auth settings or the click just fails),
+  // while an OTP is just a code the user types in here, so there's no
+  // redirect URL to get wrong. verifyOtp with type "signup" both confirms
+  // the account AND signs this tab in on success (it returns a real
+  // session, same as signInWithPassword would) — no separate
+  // getSession()/signInWithPassword fallback dance needed the way the
+  // link-based flow required.
+  const handleVerifyOtp = async () => {
+    const token = otp.join("");
+    if (token.length !== 6 || verifyChecking) return;
     setVerifyError("");
     setVerifyChecking(true);
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) {
-      // clicking the emailed link may have confirmed the account without logging in this tab
-      const { error: signInErr } = await supabase.auth.signInWithPassword({
-        email: form.email,
-        password: form.password,
-      });
-      if (signInErr) {
-        setVerifyChecking(false);
-        setVerifyError(
-          signInErr.message?.toLowerCase().includes("confirm")
-            ? "Looks like the confirmation link hasn't been clicked yet — open the email and tap it, then try again."
-            : signInErr.message
-        );
-        return;
-      }
-    }
+    const { error } = await supabase.auth.verifyOtp({
+      email: form.email,
+      token,
+      type: "signup",
+    });
     setVerifyChecking(false);
+    if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      setVerifyError(
+        msg.includes("expired")
+          ? "This code has expired — request a new one below."
+          : msg.includes("invalid") || msg.includes("token")
+          ? "That code doesn't match. Check the 6 digits and try again."
+          : error.message
+      );
+      // Wrong code entered — clear the boxes so they're not stuck staring
+      // at digits they already know are wrong, and put focus back at the start.
+      setOtp(["", "", "", "", "", ""]);
+      otpRefs.current[0]?.focus();
+      return;
+    }
     pushScreen("role");
+  };
+
+  const handleResendOtp = async () => {
+    if (resendLoading) return;
+    setVerifyError("");
+    setResendMessage("");
+    setResendLoading(true);
+    const { error } = await supabase.auth.resend({ type: "signup", email: form.email });
+    setResendLoading(false);
+    if (error) {
+      setVerifyError(error.message);
+      return;
+    }
+    setOtp(["", "", "", "", "", ""]);
+    otpRefs.current[0]?.focus();
+    setResendMessage("A new code has been sent.");
   };
 
   const canSubmitBiz = biz.name && biz.category && biz.ownerName && biz.mobile;
@@ -748,16 +800,42 @@ export default function BonikAuthFlow() {
           </div>
           <div className="slide-up rounded-2xl px-5 py-6 text-center" style={CARD_STYLE}>
             <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
-              We've sent a confirmation link to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{form.email || "your email"}</span>.
-              Open your inbox and tap the link, then come back here and continue.
+              We've sent a 6-digit code to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{form.email || "your email"}</span>.
+              Enter it below to verify your account.
             </p>
+
+            <div className="flex gap-2 justify-center mb-5">
+              {otp.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={(el) => (otpRefs.current[i] = el)}
+                  value={digit}
+                  onChange={(e) => handleOtp(i, e.target.value)}
+                  onKeyDown={(e) => handleOtpBackspace(i, e)}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  className="w-11 h-14 text-center rounded-xl border-2 text-xl font-mono outline-none transition-colors focus:border-current"
+                  style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}
+                  onFocus={(e) => (e.target.style.borderColor = TOKENS.saffron)}
+                  onBlur={(e) => (e.target.style.borderColor = TOKENS.line)}
+                />
+              ))}
+            </div>
+
             {verifyError && (
               <p className="font-mono text-xs mb-4" style={{ color: TOKENS.due }}>{verifyError}</p>
             )}
-            <PrimaryButton onClick={handleConfirmContinue} disabled={verifyChecking}>
-              {verifyChecking ? "Checking…" : "I've Confirmed — Continue"}
+            {resendMessage && !verifyError && (
+              <p className="font-mono text-xs mb-4" style={{ color: TOKENS.stamp }}>{resendMessage}</p>
+            )}
+
+            <PrimaryButton onClick={handleVerifyOtp} disabled={verifyChecking || otp.join("").length !== 6}>
+              {verifyChecking ? "Verifying…" : "Verify Code"}
             </PrimaryButton>
-            <GhostButton onClick={handleSignUp}>Resend confirmation email</GhostButton>
+            <GhostButton onClick={handleResendOtp}>
+              {resendLoading ? "Sending…" : "Resend code"}
+            </GhostButton>
           </div>
         </div>
       </Shell>
