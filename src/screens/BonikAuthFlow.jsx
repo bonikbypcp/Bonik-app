@@ -288,35 +288,144 @@ export default function BonikAuthFlow() {
     setScreen("roleGate");
   };
 
-  // ---- Forgot password ----
+  // ---- Forgot password: request code -> verify code -> set new password ----
+  // Password reset uses a 6-digit OTP end to end now, not the magic link
+  // Supabase's default email also carries — a link has to redirect back
+  // to whatever origin the app is running on (production, a preview
+  // deploy, localhost), each needing its own entry in Supabase's
+  // redirect-URL allow-list, and any mismatch there fails in a way this
+  // app can't even detect, let alone explain to the user. An OTP has no
+  // redirect URL involved at all: resetPasswordForEmail no longer passes
+  // a redirectTo, and the whole flow from here stays inside /auth.
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState("");
-  const [forgotSent, setForgotSent] = useState(false);
 
-  // redirectTo must be on Supabase's Auth → URL Configuration →
-  // "Redirect URLs" allow-list (add both the production origin,
-  // https://bonik-app.vercel.app, and http://localhost:5173 for local
-  // dev) or Supabase silently redirects the clicked link to its own
-  // default error page instead of here, even though the email itself
-  // still sends fine. Using window.location.origin instead of a
-  // hardcoded string means this resolves correctly on whichever origin
-  // the app is actually running on (production, a preview deploy, or
-  // localhost) without needing a code change per environment — but each
-  // one of those origins still has to be added to that allow-list once.
   const handleForgotPassword = async () => {
     if (!forgotEmail || forgotLoading) return;
     setForgotError("");
     setForgotLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
     setForgotLoading(false);
     if (error) {
       setForgotError(error.message);
       return;
     }
-    setForgotSent(true);
+    setResetOtp(["", "", "", "", "", ""]);
+    setResetOtpError("");
+    setResetResendMessage("");
+    pushScreen("forgotOtp");
+  };
+
+  const [resetOtp, setResetOtp] = useState(["", "", "", "", "", ""]);
+  const resetOtpRefs = useRef([]);
+  const [resetOtpChecking, setResetOtpChecking] = useState(false);
+  const [resetOtpError, setResetOtpError] = useState("");
+  const [resetResendLoading, setResetResendLoading] = useState(false);
+  const [resetResendMessage, setResetResendMessage] = useState("");
+
+  // Kept separate from the sign-up flow's own otp/otpRefs (even though
+  // the box-handling logic is identical) so a leftover digit from one
+  // flow can never bleed into the other if someone backs out of one and
+  // into the other in the same session.
+  const handleResetOtpChange = (i, val) => {
+    const digits = val.replace(/\D/g, "");
+    if (!digits) {
+      if (val === "") {
+        const next = [...resetOtp];
+        next[i] = "";
+        setResetOtp(next);
+      }
+      return;
+    }
+    const next = [...resetOtp];
+    let cursor = i;
+    for (const d of digits) {
+      if (cursor > 5) break;
+      next[cursor] = d;
+      cursor++;
+    }
+    setResetOtp(next);
+    resetOtpRefs.current[Math.min(cursor, 5)]?.focus();
+  };
+
+  const handleResetOtpBackspace = (i, e) => {
+    if (e.key === "Backspace" && !resetOtp[i] && i > 0) {
+      resetOtpRefs.current[i - 1]?.focus();
+    }
+  };
+
+  // verifyOtp with type "recovery" both confirms the code AND signs this
+  // tab in as that user (a real, if short-lived, session) — that's what
+  // authorizes the updateUser({ password }) call on the next screen.
+  const handleVerifyResetOtp = async () => {
+    const token = resetOtp.join("");
+    if (token.length !== 6 || resetOtpChecking) return;
+    setResetOtpError("");
+    setResetOtpChecking(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email: forgotEmail,
+      token,
+      type: "recovery",
+    });
+    setResetOtpChecking(false);
+    if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      setResetOtpError(
+        msg.includes("expired")
+          ? "This code has expired — request a new one below."
+          : msg.includes("invalid") || msg.includes("token")
+          ? "That code doesn't match. Check the 6 digits and try again."
+          : error.message
+      );
+      setResetOtp(["", "", "", "", "", ""]);
+      resetOtpRefs.current[0]?.focus();
+      return;
+    }
+    setNewPassword("");
+    setConfirmNewPassword("");
+    setNewPasswordError("");
+    setNewPasswordDone(false);
+    pushScreen("newPassword");
+  };
+
+  // Recovery has no dedicated resend() type the way signup does — sending
+  // another code is just calling resetPasswordForEmail again.
+  const handleResendResetOtp = async () => {
+    if (resetResendLoading) return;
+    setResetOtpError("");
+    setResetResendMessage("");
+    setResetResendLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail);
+    setResetResendLoading(false);
+    if (error) {
+      setResetOtpError(error.message);
+      return;
+    }
+    setResetOtp(["", "", "", "", "", ""]);
+    resetOtpRefs.current[0]?.focus();
+    setResetResendMessage("A new code has been sent.");
+  };
+
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [newPasswordSaving, setNewPasswordSaving] = useState(false);
+  const [newPasswordError, setNewPasswordError] = useState("");
+  const [newPasswordDone, setNewPasswordDone] = useState(false);
+
+  const canSubmitNewPassword = newPassword.length >= 6 && newPassword === confirmNewPassword;
+
+  const handleSetNewPassword = async () => {
+    if (!canSubmitNewPassword || newPasswordSaving) return;
+    setNewPasswordError("");
+    setNewPasswordSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    setNewPasswordSaving(false);
+    if (error) {
+      setNewPasswordError(error.message);
+      return;
+    }
+    setNewPasswordDone(true);
   };
 
   const [role, setRole] = useState(null);
@@ -676,7 +785,7 @@ export default function BonikAuthFlow() {
             <div className="mb-6 -mt-2 text-right">
               <button
                 type="button"
-                onClick={() => { setForgotEmail(loginForm.email); setForgotError(""); setForgotSent(false); pushScreen("forgotPassword"); }}
+                onClick={() => { setForgotEmail(loginForm.email); setForgotError(""); pushScreen("forgotPassword"); }}
                 className="font-mono text-xs underline"
                 style={{ color: TOKENS.saffronDeep }}
               >
@@ -703,36 +812,125 @@ export default function BonikAuthFlow() {
         <div className="flex flex-col justify-center min-h-[78vh]">
           <Wordmark />
           <p className="font-sans text-sm mt-2 mb-6" style={{ color: TOKENS.ink, opacity: 0.75 }}>
-            {forgotSent
-              ? "Check your inbox for the reset link."
-              : "Enter your account email and we'll send you a link to reset your password."}
+            Enter your account email and we'll send you a 6-digit code to reset your password.
           </p>
           <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
-            {forgotSent ? (
+            <TextInput
+              label="Email"
+              type="email"
+              value={forgotEmail}
+              onChange={(e) => setForgotEmail(e.target.value)}
+              placeholder="you@example.com"
+            />
+            {forgotError && (
+              <div className="mb-4 -mt-1 font-mono text-xs" style={{ color: TOKENS.due }}>
+                {forgotError}
+              </div>
+            )}
+            <PrimaryButton onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail}>
+              {forgotLoading ? "Sending…" : "Send Reset Code"}
+            </PrimaryButton>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  // ---------- FORGOT PASSWORD: enter the OTP ----------
+  if (screen === "forgotOtp") {
+    return (
+      <Shell>
+        <BackButton onClick={goBack} className="mb-6" />
+        <div className="flex flex-col justify-center min-h-[72vh]">
+          <Wordmark />
+          <p className="font-sans text-sm mt-2 mb-6" style={{ color: TOKENS.ink, opacity: 0.75 }}>
+            Enter the code to continue.
+          </p>
+          <div className="slide-up rounded-2xl px-5 py-6 text-center" style={CARD_STYLE}>
+            <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
+              We've sent a 6-digit code to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{forgotEmail}</span>.
+            </p>
+
+            <div className="flex gap-2 justify-center mb-5">
+              {resetOtp.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={(el) => (resetOtpRefs.current[i] = el)}
+                  value={digit}
+                  onChange={(e) => handleResetOtpChange(i, e.target.value)}
+                  onKeyDown={(e) => handleResetOtpBackspace(i, e)}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  maxLength={6}
+                  className="w-11 h-14 text-center rounded-xl border-2 text-xl font-mono outline-none transition-colors focus:border-current"
+                  style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}
+                  onFocus={(e) => (e.target.style.borderColor = TOKENS.saffron)}
+                  onBlur={(e) => (e.target.style.borderColor = TOKENS.line)}
+                />
+              ))}
+            </div>
+
+            {resetOtpError && (
+              <p className="font-mono text-xs mb-4" style={{ color: TOKENS.due }}>{resetOtpError}</p>
+            )}
+            {resetResendMessage && !resetOtpError && (
+              <p className="font-mono text-xs mb-4" style={{ color: TOKENS.stamp }}>{resetResendMessage}</p>
+            )}
+
+            <PrimaryButton onClick={handleVerifyResetOtp} disabled={resetOtpChecking || resetOtp.join("").length !== 6}>
+              {resetOtpChecking ? "Verifying…" : "Verify Code"}
+            </PrimaryButton>
+            <GhostButton onClick={handleResendResetOtp}>
+              {resetResendLoading ? "Sending…" : "Resend code"}
+            </GhostButton>
+          </div>
+        </div>
+      </Shell>
+    );
+  }
+
+  // ---------- FORGOT PASSWORD: set a new password ----------
+  if (screen === "newPassword") {
+    return (
+      <Shell>
+        {!newPasswordDone && <BackButton onClick={goBack} className="mb-6" />}
+        <div className="flex flex-col justify-center min-h-[78vh]">
+          <Wordmark />
+          <p className="font-sans text-sm mt-2 mb-6" style={{ color: TOKENS.ink, opacity: 0.75 }}>
+            {newPasswordDone ? "All set." : "Choose a new password for your account."}
+          </p>
+          <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
+            {newPasswordDone ? (
               <>
                 <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
-                  We've sent a password reset link to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{forgotEmail}</span>.
-                  Open it on this device to set a new password, then come back here and log in.
+                  Your password has been updated.
                 </p>
-                <PrimaryButton onClick={goBack}>Back to Log In</PrimaryButton>
-                <GhostButton onClick={handleForgotPassword}>Resend link</GhostButton>
+                <PrimaryButton onClick={() => setScreen("roleGate")}>Continue</PrimaryButton>
               </>
             ) : (
               <>
                 <TextInput
-                  label="Email"
-                  type="email"
-                  value={forgotEmail}
-                  onChange={(e) => setForgotEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  label="New Password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 6 characters"
                 />
-                {forgotError && (
-                  <div className="mb-4 -mt-1 font-mono text-xs" style={{ color: TOKENS.due }}>
-                    {forgotError}
-                  </div>
+                <TextInput
+                  label="Confirm Password"
+                  type="password"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  placeholder="Re-enter password"
+                />
+                {confirmNewPassword && newPassword !== confirmNewPassword && (
+                  <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>Passwords don't match</p>
                 )}
-                <PrimaryButton onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail}>
-                  {forgotLoading ? "Sending…" : "Send Reset Link"}
+                {newPasswordError && (
+                  <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>{newPasswordError}</p>
+                )}
+                <PrimaryButton onClick={handleSetNewPassword} disabled={!canSubmitNewPassword || newPasswordSaving}>
+                  {newPasswordSaving ? "Saving…" : "Set New Password"}
                 </PrimaryButton>
               </>
             )}
