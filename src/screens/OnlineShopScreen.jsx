@@ -188,7 +188,7 @@ export default function BonikOnlineShopScreen() {
     const needsApproval = o.status === "New";
     return (
       <Shell>
-        <button onClick={() => setSelectedOrder(null)} className="font-mono text-xs mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>← orders</button>
+        <button onClick={() => setSelectedOrder(null)} className="font-mono text-xs mb-6 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>← orders</button>
         <div className="font-display font-bold text-xl" style={{ color: TOKENS.inkDeep }}>{o.orderNo}</div>
         <div className="font-mono text-[11px] mt-1 mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>{o.customer} · {o.mobile} · {o.placedAt}</div>
 

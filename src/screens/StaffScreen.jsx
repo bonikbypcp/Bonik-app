@@ -44,7 +44,7 @@ function TextInput({ label, ...props }) {
   return (
     <div className="mb-4">
       <FieldLabel>{label}</FieldLabel>
-      <input {...props} className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+      <input {...props} className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
     </div>
   );
 }
@@ -155,7 +155,7 @@ export default function BonikStaffScreen() {
   if (screen === "requests") {
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Join Requests</h2>
         <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>They register their own account, then request to join — you just approve or reject</p>
         {actionError && <div className="mb-4 px-3 py-2 rounded-xl font-mono text-[11px]" style={{ background: "#FDECEC", color: TOKENS.due }}>{actionError}</div>}
@@ -185,7 +185,7 @@ export default function BonikStaffScreen() {
   if (selected) {
     return (
       <Shell>
-        <button onClick={() => setSelectedId(null)} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> staff list</button>
+        <button onClick={() => setSelectedId(null)} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> staff list</button>
         <div className="font-display font-bold text-xl" style={{ color: TOKENS.inkDeep }}>{selected.name}</div>
         <div className="font-mono text-[11px] mt-1 mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>{selected.code} · {selected.mobile} · {selected.designation}</div>
 

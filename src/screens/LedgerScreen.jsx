@@ -62,7 +62,7 @@ function TextInput({ label, ...props }) {
   return (
     <div className="mb-4">
       <FieldLabel>{label}</FieldLabel>
-      <input {...props} className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+      <input {...props} className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
     </div>
   );
 }
@@ -287,17 +287,17 @@ export default function BonikLedgerScreen() {
     const canSubmit = newAccount.name && newAccount.mobile;
     return (
       <Shell>
-        <button onClick={() => setAddingType(null)} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}>
+        <button onClick={() => setAddingType(null)} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>
           <ChevronLeft size={13} /> back
         </button>
         <h2 className="font-display font-semibold text-xl mb-6 capitalize" style={{ color: TOKENS.inkDeep }}>
           Add {addingType}
         </h2>
-        <TextInput label="Name" value={newAccount.name} onChange={(e) => setNewAccount((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" />
+        <TextInput label="Name" value={newAccount.name} onChange={(e) => setNewAccount((p) => ({ ...p, name: e.target.value }))} placeholder="Full name" autoCapitalize="words" />
         <TextInput label="Mobile Number" value={newAccount.mobile} onChange={(e) => setNewAccount((p) => ({ ...p, mobile: e.target.value }))} placeholder="98xxxxxxxx" />
-        <TextInput label="Address" value={newAccount.address} onChange={(e) => setNewAccount((p) => ({ ...p, address: e.target.value }))} placeholder="Shop / area / locality" />
+        <TextInput label="Address" value={newAccount.address} onChange={(e) => setNewAccount((p) => ({ ...p, address: e.target.value }))} placeholder="Shop / area / locality" autoCapitalize="words" />
         {addingType === "staff" && (
-          <TextInput label="Designation (Optional)" value={newAccount.designation} onChange={(e) => setNewAccount((p) => ({ ...p, designation: e.target.value }))} placeholder="Cashier, Manager…" />
+          <TextInput label="Designation (Optional)" value={newAccount.designation} onChange={(e) => setNewAccount((p) => ({ ...p, designation: e.target.value }))} placeholder="Cashier, Manager…" autoCapitalize="words" />
         )}
         {addingType === "transport" && (
           <div className="mb-4">
@@ -334,7 +334,7 @@ export default function BonikLedgerScreen() {
     const isSupplierGoods = tab === "supplier" && addMode === "incoming";
     return (
       <Shell>
-        <button onClick={() => setAddMode(null)} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}>
+        <button onClick={() => setAddMode(null)} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>
           <ChevronLeft size={13} /> cancel
         </button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>
@@ -374,7 +374,7 @@ export default function BonikLedgerScreen() {
           <>
             <TextInput label="Date" value={genericForm.date} onChange={(e) => setGenericForm((f) => ({ ...f, date: e.target.value }))} />
             <TextInput label="Amount" type="number" value={genericForm.amount} onChange={(e) => setGenericForm((f) => ({ ...f, amount: e.target.value }))} placeholder="₹0" />
-            <TextInput label="Note (Optional)" value={genericForm.note} onChange={(e) => setGenericForm((f) => ({ ...f, note: e.target.value }))} placeholder={tab === "supplier" ? "Payment made" : addMode === "incoming" ? "Payment received" : "Goods given"} />
+            <TextInput label="Note (Optional)" value={genericForm.note} onChange={(e) => setGenericForm((f) => ({ ...f, note: e.target.value }))} placeholder={tab === "supplier" ? "Payment made" : addMode === "incoming" ? "Payment received" : "Goods given"} autoCapitalize="sentences" />
             {saveError && <div className="mb-3 px-3 py-2 rounded-xl font-mono text-[11px]" style={{ background: "#FDECEC", color: TOKENS.due }}>{saveError}</div>}
             <div className="mt-6">
               <button
@@ -395,7 +395,7 @@ export default function BonikLedgerScreen() {
   if (selected) {
     return (
       <Shell>
-        <button onClick={() => setSelectedId(null)} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}>
+        <button onClick={() => setSelectedId(null)} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>
           <ChevronLeft size={13} /> {TABS.find((t) => t.id === tab).label} Ledger
         </button>
 

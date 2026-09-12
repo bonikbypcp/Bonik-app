@@ -68,7 +68,7 @@ export default function BonikOperatorAdmin() {
   if (screen === "plan" && editingPlan) {
     return (
       <Shell>
-        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ChevronLeft size={13} /> admin</button>
+        <button onClick={() => setScreen("main")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ChevronLeft size={13} /> admin</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>{editingPlan.label}</h2>
         <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>{editingPlan.subscribers} businesses subscribed</p>
 

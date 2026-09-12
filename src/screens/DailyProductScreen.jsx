@@ -46,7 +46,7 @@ function TextInput({ label, ...props }) {
   return (
     <div className="mb-4">
       <FieldLabel>{label}</FieldLabel>
-      <input {...props} className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
+      <input {...props} className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }} />
     </div>
   );
 }
@@ -260,7 +260,7 @@ export default function BonikDailyProductScreen() {
   if (screen === "entry") {
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-6" style={{ color: TOKENS.inkDeep }}>Daily Product Entry</h2>
 
         <TextInput label="Supplier Code" value={form.supplierCode} onChange={(e) => setForm((f) => ({ ...f, supplierCode: e.target.value }))} placeholder="SUP-006" />
@@ -272,7 +272,8 @@ export default function BonikDailyProductScreen() {
               value={form.productName}
               onChange={(e) => setForm((f) => ({ ...f, productName: e.target.value }))}
               placeholder="type the product name"
-              className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none"
+              autoCapitalize="words"
+              className="w-full border-0 border-b-2 rounded-t-lg px-2.5 pt-2 pb-2 text-[15px] font-sans outline-none"
               style={{ borderColor: TOKENS.saffron, color: TOKENS.inkDeep }}
             />
           ) : (
@@ -302,7 +303,7 @@ export default function BonikDailyProductScreen() {
         <TextInput label="Lot Number (Optional)" value={form.lot} onChange={(e) => setForm((f) => ({ ...f, lot: e.target.value }))} />
         <TextInput label="Transport Number (Optional)" value={form.transport} onChange={(e) => setForm((f) => ({ ...f, transport: e.target.value }))} />
         <TextInput label="Weight in KG (Optional)" type="number" value={form.weight} onChange={(e) => setForm((f) => ({ ...f, weight: e.target.value }))} />
-        <TextInput label="Notes (Optional)" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} />
+        <TextInput label="Notes (Optional)" value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))} autoCapitalize="sentences" />
 
         {submitError && <div className="mb-3 px-3 py-2 rounded-xl font-mono text-[11px]" style={{ background: "#FDECEC", color: TOKENS.due }}>{submitError}</div>}
         <div className="mt-6">
@@ -337,7 +338,7 @@ export default function BonikDailyProductScreen() {
 
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Goods On Order</h2>
         <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>Tick OK if it matches, or type what actually arrived</p>
 
@@ -408,7 +409,7 @@ export default function BonikDailyProductScreen() {
   if (screen === "return") {
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Return to Supplier</h2>
         <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>Reduces stock, updates supplier ledger</p>
 
@@ -421,7 +422,7 @@ export default function BonikDailyProductScreen() {
           </div>
         </div>
         <TextInput label="Quantity" type="number" value={returnForm.qty} onChange={(e) => setReturnForm((f) => ({ ...f, qty: e.target.value }))} placeholder="0" />
-        <TextInput label="Reason (Optional)" value={returnForm.reason} onChange={(e) => setReturnForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Damaged, wrong item…" />
+        <TextInput label="Reason (Optional)" value={returnForm.reason} onChange={(e) => setReturnForm((f) => ({ ...f, reason: e.target.value }))} placeholder="Damaged, wrong item…" autoCapitalize="sentences" />
 
         {submitError && <div className="mb-3 px-3 py-2 rounded-xl font-mono text-[11px]" style={{ background: "#FDECEC", color: TOKENS.due }}>{submitError}</div>}
         <div className="mt-6">

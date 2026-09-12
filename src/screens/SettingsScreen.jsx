@@ -96,7 +96,7 @@ export default function BonikSettingsScreen() {
 
   return (
     <Shell>
-      <button onClick={() => navigate("/home")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}>
+      <button onClick={() => navigate("/home")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}>
         <ChevronLeft size={13} /> home
       </button>
 

@@ -147,7 +147,7 @@ export default function BonikBillScanScreen() {
     const total = reviewItems.reduce((s, it) => s + (parseFloat(it.amount) || 0), 0);
     return (
       <Shell>
-        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+        <button onClick={() => setScreen("list")} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
         <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Review Bill</h2>
         <p className="font-mono text-[11px] mb-5" style={{ color: TOKENS.ink, opacity: 0.68 }}>Check and fix before saving — nothing's saved yet</p>
 
@@ -159,7 +159,7 @@ export default function BonikBillScanScreen() {
           {reviewItems.map((it, i) => (
             <Card key={i} className="px-3.5 py-3">
               <div className="flex items-center gap-2 mb-2">
-                <input value={it.name} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Item name"
+                <input value={it.name} onChange={(e) => updateItem(i, "name", e.target.value)} placeholder="Item name" autoCapitalize="words"
                   className="flex-1 bg-transparent border-0 border-b-2 pb-1 text-[13px] font-sans outline-none" style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep }} />
                 <button onClick={() => removeItem(i)}><Trash2 size={14} color={TOKENS.due} /></button>
               </div>
@@ -292,7 +292,7 @@ function CleanupScreen({ businessId, onBack }) {
 
   return (
     <Shell>
-      <button onClick={onBack} className="font-mono text-xs mb-6 flex items-center gap-1" style={{ color: TOKENS.ink, opacity: 0.68 }}><ArrowLeft size={13} /> back</button>
+      <button onClick={onBack} className="font-mono text-xs mb-6 flex items-center gap-1 rounded-full border px-3 py-1" style={{ color: TOKENS.ink, opacity: 0.68, background: "#FFFFFF", borderColor: TOKENS.line }}><ArrowLeft size={13} /> back</button>
       <h2 className="font-display font-semibold text-xl mb-1" style={{ color: TOKENS.inkDeep }}>Fix Similar Names</h2>
       <p className="font-mono text-[11px] mb-6" style={{ color: TOKENS.ink, opacity: 0.68 }}>Tick the ones that are the same item, then pick the correct spelling</p>
 
@@ -319,7 +319,7 @@ function CleanupScreen({ businessId, onBack }) {
       {selectedNames.length > 0 && (
         <div className="mb-6">
           <div className="font-mono text-[10px] uppercase tracking-wide mb-1.5" style={{ color: TOKENS.ink, opacity: 0.72 }}>Correct Spelling</div>
-          <input value={referenceName} onChange={(e) => setReferenceName(e.target.value)}
+          <input value={referenceName} onChange={(e) => setReferenceName(e.target.value)} autoCapitalize="words"
             className="w-full bg-transparent border-0 border-b-2 pb-2 text-[15px] font-sans outline-none mb-2" style={{ borderColor: TOKENS.saffron, color: TOKENS.inkDeep }} />
           <div className="font-mono text-[9.5px]" style={{ color: TOKENS.ink, opacity: 0.58 }}>
             {selectedNames.filter((n) => n !== referenceName).length} item name(s) will be renamed to this
