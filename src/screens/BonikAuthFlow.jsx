@@ -287,15 +287,15 @@ export default function BonikAuthFlow() {
     setScreen("roleGate");
   };
 
-  // ---- Google / Facebook sign-in — replaces manual email+password
-  // registration and its OTP step entirely. signInWithOAuth redirects the
-  // whole page to the provider and back (not a popup), so there is no
-  // "success" branch to handle here: a resolved call with no error means
-  // the browser is already navigating away. The effect right below is
-  // what picks things up again once the provider redirects back to
-  // /auth — Google/Facebook have already verified the email by the time
-  // that happens, so there's nothing left for this app to confirm.
-  const [oauthLoading, setOauthLoading] = useState(null); // "google" | "facebook" | null
+  // ---- Google sign-in — replaces manual email+password registration
+  // and its OTP step entirely. signInWithOAuth redirects the whole page
+  // to the provider and back (not a popup), so there is no "success"
+  // branch to handle here: a resolved call with no error means the
+  // browser is already navigating away. The effect right below is what
+  // picks things up again once Google redirects back to /auth — Google
+  // has already verified the email by the time that happens, so there's
+  // nothing left for this app to confirm.
+  const [oauthLoading, setOauthLoading] = useState(null); // "google" | null
   const [oauthError, setOauthError] = useState("");
 
   const handleOAuth = async (provider) => {
@@ -314,8 +314,8 @@ export default function BonikAuthFlow() {
   // Runs once on mount. supabase-js parses the provider's tokens out of
   // the URL (detectSessionInUrl, on by default) before this effect fires,
   // so a session already being present here — on the very first render of
-  // a fresh /auth load — means we've either just landed back from Google/
-  // Facebook, or there's otherwise already a live session for this tab.
+  // a fresh /auth load — means we've either just landed back from Google,
+  // or there's otherwise already a live session for this tab.
   // Either way it's routed exactly like a password login success:
   // roleGate takes an existing member straight to /home, or a first-time
   // sign-in on to role selection, skipping the old register/verify steps
@@ -654,14 +654,6 @@ export default function BonikAuthFlow() {
             >
               {oauthLoading === "google" ? "Connecting…" : "Continue with Google"}
             </PrimaryButton>
-            <button
-              onClick={() => handleOAuth("facebook")}
-              disabled={oauthLoading !== null}
-              className="w-full py-4 rounded-2xl font-display font-semibold text-[16px] tracking-wide border-2 transition-all active:scale-[0.98] disabled:opacity-60"
-              style={{ borderColor: TOKENS.ink, color: TOKENS.ink, background: "#FFFFFF" }}
-            >
-              {oauthLoading === "facebook" ? "Connecting…" : "Continue with Facebook"}
-            </button>
             {oauthError && (
               <p className="font-mono text-xs text-center" style={{ color: TOKENS.due }}>{oauthError}</p>
             )}
@@ -730,7 +722,7 @@ export default function BonikAuthFlow() {
               {loginLoading ? "Logging in…" : "Log In"}
             </PrimaryButton>
             <GhostButton onClick={goBack}>
-              New here? Continue with Google/Facebook →
+              New here? Continue with Google →
             </GhostButton>
           </div>
         </div>

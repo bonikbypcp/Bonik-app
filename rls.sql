@@ -12,7 +12,7 @@
 
 alter table users alter column password_hash drop not null;
 
--- Google/Facebook sign-in (see BonikAuthFlow.jsx's handleOAuth) never
+-- Google sign-in (see BonikAuthFlow.jsx's handleOAuth) never
 -- supplies a mobile_number in the provider's claims the way the old
 -- manual signup form used to, so this trigger has nothing to put here for
 -- those accounts. mobile_number was NOT NULL UNIQUE — coalescing a
