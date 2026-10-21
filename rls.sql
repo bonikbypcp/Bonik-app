@@ -12,6 +12,19 @@
 
 alter table users alter column password_hash drop not null;
 
+-- Google/Facebook sign-in (see BonikAuthFlow.jsx's handleOAuth) never
+-- supplies a mobile_number in the provider's claims the way the old
+-- manual signup form used to, so this trigger has nothing to put here for
+-- those accounts. mobile_number was NOT NULL UNIQUE — coalescing a
+-- missing value to '' would have given every such account the same
+-- empty string, and the *second* one would violate the UNIQUE constraint
+-- and fail the trigger (which rolls back the auth.users insert itself,
+-- since this trigger is AFTER INSERT), breaking sign-in for every OAuth
+-- user after the first. Dropping NOT NULL lets it be genuinely NULL
+-- instead — Postgres's UNIQUE constraint allows any number of NULLs,
+-- only duplicate non-NULL values collide.
+alter table users alter column mobile_number drop not null;
+
 create or replace function public.handle_new_auth_user()
 returns trigger as $$
 begin
@@ -19,7 +32,7 @@ begin
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
-    coalesce(new.raw_user_meta_data->>'mobile_number', ''),
+    new.raw_user_meta_data->>'mobile_number', -- null, not '', when absent (OAuth accounts) — see comment above
     new.email,
     new.email_confirmed_at
   );

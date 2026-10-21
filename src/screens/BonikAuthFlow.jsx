@@ -268,7 +268,6 @@ export default function BonikAuthFlow() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
-  const [mode, setMode] = useState("login"); // login | register
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState("");
@@ -287,6 +286,57 @@ export default function BonikAuthFlow() {
     }
     setScreen("roleGate");
   };
+
+  // ---- Google / Facebook sign-in — replaces manual email+password
+  // registration and its OTP step entirely. signInWithOAuth redirects the
+  // whole page to the provider and back (not a popup), so there is no
+  // "success" branch to handle here: a resolved call with no error means
+  // the browser is already navigating away. The effect right below is
+  // what picks things up again once the provider redirects back to
+  // /auth — Google/Facebook have already verified the email by the time
+  // that happens, so there's nothing left for this app to confirm.
+  const [oauthLoading, setOauthLoading] = useState(null); // "google" | "facebook" | null
+  const [oauthError, setOauthError] = useState("");
+
+  const handleOAuth = async (provider) => {
+    setOauthError("");
+    setOauthLoading(provider);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth` },
+    });
+    if (error) {
+      setOauthLoading(null);
+      setOauthError(error.message);
+    }
+  };
+
+  // Runs once on mount. supabase-js parses the provider's tokens out of
+  // the URL (detectSessionInUrl, on by default) before this effect fires,
+  // so a session already being present here — on the very first render of
+  // a fresh /auth load — means we've either just landed back from Google/
+  // Facebook, or there's otherwise already a live session for this tab.
+  // Either way it's routed exactly like a password login success:
+  // roleGate takes an existing member straight to /home, or a first-time
+  // sign-in on to role selection, skipping the old register/verify steps
+  // entirely since there's no password to set and no email to confirm.
+  useEffect(() => {
+    let mounted = true;
+    const routeIfSignedIn = () => {
+      if (!mounted) return;
+      setScreen((s) => (s === "landing" ? "roleGate" : s));
+    };
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) routeIfSignedIn();
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN") routeIfSignedIn();
+    });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
 
   // ---- Forgot password: request code -> verify code -> set new password ----
   // Password reset uses a 6-digit OTP end to end now, not the magic link
@@ -324,10 +374,6 @@ export default function BonikAuthFlow() {
   const [resetResendLoading, setResetResendLoading] = useState(false);
   const [resetResendMessage, setResetResendMessage] = useState("");
 
-  // Kept separate from the sign-up flow's own otp/otpRefs (even though
-  // the box-handling logic is identical) so a leftover digit from one
-  // flow can never bleed into the other if someone backs out of one and
-  // into the other in the same session.
   const handleResetOtpChange = (i, val) => {
     const digits = val.replace(/\D/g, "");
     if (!digits) {
@@ -476,16 +522,6 @@ export default function BonikAuthFlow() {
     if (screen === "roleGate" && !roleGateChecking) pushScreen("role");
   }, [screen, roleGateChecking, pushScreen]);
 
-  const [form, setForm] = useState({
-    fullName: "",
-    mobile: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const otpRefs = useRef([]);
-
   const [biz, setBiz] = useState({
     name: "",
     category: "",
@@ -498,128 +534,7 @@ export default function BonikAuthFlow() {
   const set = (obj, setter) => (key) => (e) =>
     setter((prev) => ({ ...prev, [key]: e.target.value }));
 
-  const setF = set(form, setForm);
   const setB = set(biz, setBiz);
-
-  const handleOtp = (i, val) => {
-    // Handles pasting the whole 6-digit code at once (a very normal way
-    // to get it out of an email) as well as typing one digit at a time.
-    const digits = val.replace(/\D/g, "");
-    if (!digits) {
-      if (val === "") {
-        const next = [...otp];
-        next[i] = "";
-        setOtp(next);
-      }
-      return;
-    }
-    const next = [...otp];
-    let cursor = i;
-    for (const d of digits) {
-      if (cursor > 5) break;
-      next[cursor] = d;
-      cursor++;
-    }
-    setOtp(next);
-    otpRefs.current[Math.min(cursor, 5)]?.focus();
-  };
-
-  const handleOtpBackspace = (i, e) => {
-    if (e.key === "Backspace" && !otp[i] && i > 0) {
-      otpRefs.current[i - 1]?.focus();
-    }
-  };
-
-  const canSubmitAccount =
-    form.fullName && form.mobile.length >= 10 && form.email.includes("@") &&
-    form.password.length >= 6 && form.password === form.confirmPassword;
-
-  const [signUpLoading, setSignUpLoading] = useState(false);
-  const [signUpError, setSignUpError] = useState("");
-
-  const handleSignUp = async () => {
-    setSignUpError("");
-    setSignUpLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: { data: { full_name: form.fullName, mobile_number: form.mobile } },
-    });
-    setSignUpLoading(false);
-    if (error) {
-      setSignUpError(error.message);
-      return;
-    }
-    // Clear state left over from any earlier attempt (a previous email's
-    // typed-in digits, or an error from a previous wrong code) so the OTP
-    // step always starts from a clean slate for this signup.
-    setOtp(["", "", "", "", "", ""]);
-    setVerifyError("");
-    setResendMessage("");
-    pushScreen("verify");
-  };
-
-  const [verifyChecking, setVerifyChecking] = useState(false);
-  const [verifyError, setVerifyError] = useState("");
-  const [resendLoading, setResendLoading] = useState(false);
-  const [resendMessage, setResendMessage] = useState("");
-
-  // Signup verification uses the 6-digit OTP from the "Confirm signup"
-  // email (see the OTP boxes below), not the magic link Supabase also
-  // puts in that same email — a link has to redirect back to whatever
-  // origin the app happens to be running on (production, a preview
-  // deploy, localhost, each with its own URL that has to be individually
-  // allow-listed in Supabase's Auth settings or the click just fails),
-  // while an OTP is just a code the user types in here, so there's no
-  // redirect URL to get wrong. verifyOtp with type "signup" both confirms
-  // the account AND signs this tab in on success (it returns a real
-  // session, same as signInWithPassword would) — no separate
-  // getSession()/signInWithPassword fallback dance needed the way the
-  // link-based flow required.
-  const handleVerifyOtp = async () => {
-    const token = otp.join("");
-    if (token.length !== 6 || verifyChecking) return;
-    setVerifyError("");
-    setVerifyChecking(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email: form.email,
-      token,
-      type: "signup",
-    });
-    setVerifyChecking(false);
-    if (error) {
-      const msg = error.message?.toLowerCase() || "";
-      setVerifyError(
-        msg.includes("expired")
-          ? "This code has expired — request a new one below."
-          : msg.includes("invalid") || msg.includes("token")
-          ? "That code doesn't match. Check the 6 digits and try again."
-          : error.message
-      );
-      // Wrong code entered — clear the boxes so they're not stuck staring
-      // at digits they already know are wrong, and put focus back at the start.
-      setOtp(["", "", "", "", "", ""]);
-      otpRefs.current[0]?.focus();
-      return;
-    }
-    pushScreen("role");
-  };
-
-  const handleResendOtp = async () => {
-    if (resendLoading) return;
-    setVerifyError("");
-    setResendMessage("");
-    setResendLoading(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email: form.email });
-    setResendLoading(false);
-    if (error) {
-      setVerifyError(error.message);
-      return;
-    }
-    setOtp(["", "", "", "", "", ""]);
-    otpRefs.current[0]?.focus();
-    setResendMessage("A new code has been sent.");
-  };
 
   const canSubmitBiz = biz.name && biz.category && biz.ownerName && biz.mobile;
   const [bizLoading, setBizLoading] = useState(false);
@@ -733,15 +648,34 @@ export default function BonikAuthFlow() {
             </p>
           </div>
           <div className="space-y-3">
-            <PrimaryButton onClick={() => { setMode("login"); pushScreen("login"); }}>
-              Log In
+            <PrimaryButton
+              onClick={() => handleOAuth("google")}
+              disabled={oauthLoading !== null}
+            >
+              {oauthLoading === "google" ? "Connecting…" : "Continue with Google"}
             </PrimaryButton>
             <button
-              onClick={() => { setMode("register"); pushScreen("register"); }}
-              className="w-full py-4 rounded-2xl font-display font-semibold text-[16px] tracking-wide border-2 transition-all active:scale-[0.98]"
+              onClick={() => handleOAuth("facebook")}
+              disabled={oauthLoading !== null}
+              className="w-full py-4 rounded-2xl font-display font-semibold text-[16px] tracking-wide border-2 transition-all active:scale-[0.98] disabled:opacity-60"
               style={{ borderColor: TOKENS.ink, color: TOKENS.ink, background: "#FFFFFF" }}
             >
-              Create a Business
+              {oauthLoading === "facebook" ? "Connecting…" : "Continue with Facebook"}
+            </button>
+            {oauthError && (
+              <p className="font-mono text-xs text-center" style={{ color: TOKENS.due }}>{oauthError}</p>
+            )}
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1 h-px" style={{ background: TOKENS.line }} />
+              <span className="font-mono text-[11px] uppercase tracking-widest" style={{ color: TOKENS.ink, opacity: 0.5 }}>or</span>
+              <div className="flex-1 h-px" style={{ background: TOKENS.line }} />
+            </div>
+            <button
+              onClick={() => pushScreen("login")}
+              className="w-full py-3 font-mono text-xs underline"
+              style={{ color: TOKENS.saffronDeep }}
+            >
+              Log in with email and password
             </button>
           </div>
         </div>
@@ -795,8 +729,8 @@ export default function BonikAuthFlow() {
             <PrimaryButton onClick={handleLogin} disabled={loginLoading || !loginForm.email || !loginForm.password}>
               {loginLoading ? "Logging in…" : "Log In"}
             </PrimaryButton>
-            <GhostButton onClick={() => { setMode("register"); pushScreen("register"); }}>
-              New here? Create a business →
+            <GhostButton onClick={goBack}>
+              New here? Continue with Google/Facebook →
             </GhostButton>
           </div>
         </div>
@@ -951,104 +885,15 @@ export default function BonikAuthFlow() {
     );
   }
 
-  // ---------- REGISTER: account details ----------
-  if (screen === "register") {
-    return (
-      <Shell>
-        <BackButton onClick={goBack} className="mb-6" />
-        <div className="flex flex-col justify-center min-h-[72vh]">
-          <ProgressDots step={0} total={4} />
-          <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 1 of 4</div>
-            <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Create your account</h2>
-          </div>
-          <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
-            <TextInput label="Full Name" value={form.fullName} onChange={setF("fullName")} placeholder="Ananya Sharma" autoCapitalize="words" />
-            <TextInput label="Mobile Number" value={form.mobile} onChange={setF("mobile")} placeholder="98xxxxxxxx" />
-            <TextInput label="Email Address" value={form.email} onChange={setF("email")} placeholder="you@example.com" />
-            <TextInput label="Password" type="password" value={form.password} onChange={setF("password")} placeholder="At least 6 characters" />
-            <TextInput label="Confirm Password" type="password" value={form.confirmPassword} onChange={setF("confirmPassword")} placeholder="Re-enter password" />
-            {form.confirmPassword && form.password !== form.confirmPassword && (
-              <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>Passwords don't match</p>
-            )}
-            {signUpError && (
-              <p className="font-mono text-xs -mt-2 mb-4" style={{ color: TOKENS.due }}>{signUpError}</p>
-            )}
-            <div className="mt-6">
-              <PrimaryButton disabled={!canSubmitAccount || signUpLoading} onClick={handleSignUp}>
-                {signUpLoading ? "Creating account…" : "Continue"}
-              </PrimaryButton>
-            </div>
-          </div>
-        </div>
-      </Shell>
-    );
-  }
-
-  // ---------- REGISTER: email verification ----------
-  if (screen === "verify") {
-    return (
-      <Shell>
-        <BackButton onClick={goBack} className="mb-6" />
-        <div className="flex flex-col justify-center min-h-[72vh]">
-          <ProgressDots step={1} total={4} />
-          <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 2 of 4</div>
-            <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Verify your email</h2>
-          </div>
-          <div className="slide-up rounded-2xl px-5 py-6 text-center" style={CARD_STYLE}>
-            <p className="font-sans text-sm mb-6" style={{ color: TOKENS.ink, opacity: 0.8 }}>
-              We've sent a 6-digit code to <span style={{ color: TOKENS.inkDeep, fontWeight: 600 }}>{form.email || "your email"}</span>.
-              Enter it below to verify your account.
-            </p>
-
-            <div className="flex gap-2 justify-center mb-5">
-              {otp.map((digit, i) => (
-                <input
-                  key={i}
-                  ref={(el) => (otpRefs.current[i] = el)}
-                  value={digit}
-                  onChange={(e) => handleOtp(i, e.target.value)}
-                  onKeyDown={(e) => handleOtpBackspace(i, e)}
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={6}
-                  className="w-11 h-14 text-center rounded-xl border-2 text-xl font-mono outline-none transition-colors focus:border-current"
-                  style={{ borderColor: TOKENS.line, color: TOKENS.inkDeep, background: "#FFFFFF" }}
-                  onFocus={(e) => (e.target.style.borderColor = TOKENS.saffron)}
-                  onBlur={(e) => (e.target.style.borderColor = TOKENS.line)}
-                />
-              ))}
-            </div>
-
-            {verifyError && (
-              <p className="font-mono text-xs mb-4" style={{ color: TOKENS.due }}>{verifyError}</p>
-            )}
-            {resendMessage && !verifyError && (
-              <p className="font-mono text-xs mb-4" style={{ color: TOKENS.stamp }}>{resendMessage}</p>
-            )}
-
-            <PrimaryButton onClick={handleVerifyOtp} disabled={verifyChecking || otp.join("").length !== 6}>
-              {verifyChecking ? "Verifying…" : "Verify Code"}
-            </PrimaryButton>
-            <GhostButton onClick={handleResendOtp}>
-              {resendLoading ? "Sending…" : "Resend code"}
-            </GhostButton>
-          </div>
-        </div>
-      </Shell>
-    );
-  }
-
-  // ---------- REGISTER: role selection ----------
+  // ---------- ONBOARDING: role selection ----------
   if (screen === "role") {
     return (
       <Shell>
         <BackButton onClick={goBack} className="mb-6" />
         <div className="flex flex-col justify-center min-h-[72vh]">
-          <ProgressDots step={2} total={4} />
+          <ProgressDots step={0} total={2} />
           <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 3 of 4</div>
+            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 1 of 2</div>
             <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>What's your role?</h2>
             <p className="font-sans text-sm mt-2" style={{ color: TOKENS.ink, opacity: 0.75 }}>This decides what BONIK sets up for you next.</p>
           </div>
@@ -1161,9 +1006,9 @@ export default function BonikAuthFlow() {
       <Shell>
         <BackButton onClick={goBack} className="mb-6" />
         <div className="flex flex-col justify-center min-h-[72vh]">
-          <ProgressDots step={3} total={4} />
+          <ProgressDots step={1} total={2} />
           <div className="mb-6">
-            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 4 of 4</div>
+            <div className="font-mono text-[11px] uppercase tracking-widest mb-1" style={{ color: TOKENS.saffronDeep }}>Step 2 of 2</div>
             <h2 className="font-display font-semibold text-xl" style={{ color: TOKENS.inkDeep }}>Set up your business</h2>
           </div>
           <div className="slide-up rounded-2xl px-5 py-6" style={CARD_STYLE}>
